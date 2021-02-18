@@ -4,7 +4,6 @@ from typing import List, Tuple, Dict, Optional, Hashable
 
 from rl2021.utils import MDP, Transition, State, Action
 
-### BLAH BLAH CHANGE
 class MDPSolver(ABC):
     """Base class for MDP solvers
 
@@ -77,11 +76,51 @@ class ValueIteration(MDPSolver):
         :return (np.ndarray of float with dim (num of states)):
             1D NumPy array with the values of each state.
             E.g. V[3] returns the computed value for state 3
-        """
+        """ 
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
-        return V
+
+        #create list of all state keys
+        state_index = [self.mdp._state_dict.get(key) for key in self.mdp.states] 
+        #get terminal state indices
+        terminal_state_idx = [self.mdp._state_dict.get(key) for key in self.mdp.terminal_states]
+        # get non terminal state indices
+        non_terminal_idx = [ i for i in state_index if i not in terminal_state_idx] 
+        
+        # get variables from mdp
+        num_of_actions = self.action_dim 
+        c = np.full(self.state_dim, theta)
+        c[terminal_state_idx] = 0
+        
+        # while the deltas are greater than theta
+        while np.any(c) >= theta:
+            delta = np.zeros(self.state_dim)
+            # Loop over all states
+            for state in non_terminal_idx:
+                #delta<--0
+                v = V[state]
+                #Loop for each actions
+                val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(num_of_actions)]
+                V[state] = np.max(val_sum)
+
+                delta[state] = np.max([delta[state], np.abs(v - V[state])])
+                c[state] = delta[state]
+        return V #np array of all state values
+    # My go
+        # theta = 0.01
+        # for s in self.mdp.states:
+
+        #     # initialise array of action values given state s to be zeroes each time
+        #     A = np.zeros(self.action_dim)
+        #     for a in self.mdp.actions:
+        #         currentVal = V[s]
+        #         # sum
+        #         A[a] = self.mdp.P[s,a,:] * (self.mdp.R[s, a, :]+ self.gamma * V[s, a, :])
+        #     # max of all numbers in A
+        #     V[A] = np.max(A)
+
+        # raise NotImplementedError("Needed for Q1")
+        # return V
 
     def _calc_policy(self, V: np.ndarray) -> np.ndarray:
         """Calculates the policy
@@ -102,7 +141,21 @@ class ValueIteration(MDPSolver):
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+
+        # Get values from V = (high,low) = [6.5, 5.8]
+
+        # calc_values = np.zeros([self.state_dim, self.action_dim])
+
+        for state in (self.mdp._state_dict.keys()):
+            for action in range(self.action_dim):
+
+                # val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(num_of_actions)]
+                # V[state] = np.max(val_sum)
+
+                argmax_found = np.argmax([np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)))
+                policy[state, argmax_found ] =  1
+
+        # raise NotImplementedError("Needed for Q1")
         return policy
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
