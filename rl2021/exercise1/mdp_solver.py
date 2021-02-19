@@ -141,19 +141,22 @@ class ValueIteration(MDPSolver):
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         ### PUT YOUR CODE HERE ###
-
+        # n, p, r, g = self.action_dim, self.mdp.P, self.mdp.R, self.gamma
         # Get values from V = (high,low) = [6.5, 5.8]
 
-        # calc_values = np.zeros([self.state_dim, self.action_dim])
+        # calc_values = np.zeros([self.statet_dim, self.action_dim])
 
-        for state in (self.mdp._state_dict.keys()):
-            for action in range(self.action_dim):
+        # for state in (self.mdp._state_dict.keys()):
+        for state in range(len(V)):
+            policy[state] = 0
+            policy[state, np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])] = 1
 
+            # for action in range(self.action_dim):
                 # val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(num_of_actions)]
                 # V[state] = np.max(val_sum)
 
-                argmax_found = np.argmax([np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)))
-                policy[state, argmax_found ] =  1
+                # argmax_found = np.argmax([np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V))])
+                # policy[state, argmax_found ] =  1
 
         # raise NotImplementedError("Needed for Q1")
         return policy
