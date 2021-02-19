@@ -248,3 +248,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+.idea/modules.xml
+.gitignore
+.idea/RL_coursework_21.iml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/workspace.xml
+.gitignore
+.gitignore
+.idea/vcs.xml
