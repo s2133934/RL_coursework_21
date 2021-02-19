@@ -91,16 +91,17 @@ class ValueIteration(MDPSolver):
         num_of_actions = self.action_dim 
         c = np.full(self.state_dim, theta)
         c[terminal_state_idx] = 0
-        
+        i=0
         # while the deltas are greater than theta
         while np.any(c) >= theta:
+            i+=1
             delta = np.zeros(self.state_dim)
             # Loop over all states
-            for state in non_terminal_idx:
+            for state in range(self.state_dim):
                 #delta<--0
                 v = V[state]
-                #Loop for each actions
-                val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(num_of_actions)]
+                # Loop for each actions
+                val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(self.action_dim)]
                 V[state] = np.max(val_sum)
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
@@ -148,8 +149,9 @@ class ValueIteration(MDPSolver):
 
         # for state in (self.mdp._state_dict.keys()):
         for state in range(len(V)):
-            policy[state] = 0
-            policy[state, np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])] = 1
+
+            index = np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])    
+            policy[state, index] = 1
 
             # for action in range(self.action_dim):
                 # val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(num_of_actions)]
@@ -159,6 +161,16 @@ class ValueIteration(MDPSolver):
                 # policy[state, argmax_found ] =  1
 
         # raise NotImplementedError("Needed for Q1")
+        print("V:::", V)
+        print("P:::", self.mdp.P)
+        print("SHAPE P::: ", self.mdp.P.shape)
+        print("R:::", self.mdp.R)
+        print("SHAPE R::: ", np.shape(self.mdp.R))
+        print("GAMMA::: ", self.gamma)
+        print("SHAPE GAMMA::: ", np.shape(self.gamma))
+        print("state dict::: ", self.mdp._state_dict)
+        print("POLICY[STATE,:]::: ", policy[0, :])
+        print("POLICY shape::: ", policy.shape)
         return policy
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
@@ -204,33 +216,81 @@ class PolicyIteration(MDPSolver):
             It is indexed as (State) where V[State] is the value of state 'State'
         """
         V = np.zeros(self.state_dim)
+        theta = 1E-06
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        print("POLICY ITER - POL EVAL")
+        #create list of all state keys
+        state_index = [self.mdp._state_dict.get(key) for key in self.mdp.states] 
+        #get terminal state indices
+        terminal_state_idx = [self.mdp._state_dict.get(key) for key in self.mdp.terminal_states]
+        # get non terminal state indices
+        non_terminal_idx = [ i for i in state_index if i not in terminal_state_idx] 
+        
+        # get variables from mdp
+        num_of_actions = self.action_dim 
+        c = np.full(self.state_dim, theta)
+        c[terminal_state_idx] = 0
+        
+        # while the deltas are greater than theta
+        while np.any(c) >= theta:
+            delta = np.zeros(self.state_dim)
+            # Loop over all states
+            for state in range(self.state_dim):
+                #delta<--0
+                v = V[state]
+                # Loop for each actions
+                for action in range(self.action_dim):
+                    
+                    first = np.matmul(policy[state,:], np.transpose(self.mdp.P[state,action,:]))
+                    val_sum = [np.matmul(first, self.mdp.R[state,action,:] + self.gamma * V ) ]
+                    V[state] = np.max(val_sum)
+
+                delta[state] = np.max([delta[state], np.abs(v - V[state])])
+                c[state] = delta[state]
+
+        print("V::: ", np.array(V))
+        print("policy[state,:] :::", policy[state,:])
+        # raise NotImplementedError("Needed for Q1")
         return np.array(V)
 
     def _policy_improvement(self) -> Tuple[np.ndarray, np.ndarray]:
         """Computes one policy improvement iteration
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
+            **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
 
-        Useful Variables (As with Value Iteration):
-        1. `self.mpd` -- Gives access to the MDP.
-        2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
-            E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
-            2) can be accessed with `self.R[3, 2, 4]`
-        3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
-            *REMEMBER*: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
-            E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
-            state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
+            Useful Variables (As with Value Iteration):
+            1. `self.mpd` -- Gives access to the MDP.
+            2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
+                E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
+                2) can be accessed with `self.R[3, 2, 4]`
+            3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
+                *REMEMBER*: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
+                E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
+                state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
 
-        :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
-                       np.ndarray of float with dim (num of states)):
-            Tuple of calculated policy and value function
+            :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
+                        np.ndarray of float with dim (num of states)):
+                Tuple of calculated policy and value function
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         V = np.zeros([self.state_dim])
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        print("POLICY ITER - POL IMPROV")
+
+        policy_compare = np.zeros([self.state_dim, self.action_dim])
+        policy_stable = True 
+
+        for state in range(len(V)):
+            old_action = policy[state, :] 
+            index = np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])    
+            policy[state, index] = 1
+
+            if np.array_equal(old_action,policy[state,:]): # naming! 
+                policy_stable = False
+                print("plicy stable = false")
+                V = self._policy_eval(policy)
+        print("POLICY PRINT:::", policy)
+        # raise NotImplementedError("Needed for Q1")
         return policy, V
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
