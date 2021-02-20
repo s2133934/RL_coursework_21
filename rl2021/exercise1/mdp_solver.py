@@ -80,8 +80,8 @@ class ValueIteration(MDPSolver):
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
 
-        #create list of all state keys
-        state_index = [self.mdp._state_dict.get(key) for key in self.mdp.states] 
+        #create list of all state keys - 
+        state_index = [self.mdp._state_dict.get(key) for key in self.mdp.states]
         #get terminal state indices
         terminal_state_idx = [self.mdp._state_dict.get(key) for key in self.mdp.terminal_states]
         # get non terminal state indices
@@ -105,7 +105,7 @@ class ValueIteration(MDPSolver):
                 V[state] = np.max(val_sum)
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
-                c[state] = delta[state]
+                c[state] = delta[state] 
         return V #np array of all state values
     # My go
         # theta = 0.01
@@ -161,16 +161,16 @@ class ValueIteration(MDPSolver):
                 # policy[state, argmax_found ] =  1
 
         # raise NotImplementedError("Needed for Q1")
-        print("V:::", V)
-        print("P:::", self.mdp.P)
-        print("SHAPE P::: ", self.mdp.P.shape)
-        print("R:::", self.mdp.R)
-        print("SHAPE R::: ", np.shape(self.mdp.R))
-        print("GAMMA::: ", self.gamma)
-        print("SHAPE GAMMA::: ", np.shape(self.gamma))
-        print("state dict::: ", self.mdp._state_dict)
-        print("POLICY[STATE,:]::: ", policy[0, :])
-        print("POLICY shape::: ", policy.shape)
+        # print("V:::", V)
+        # print("P:::", self.mdp.P)
+        # print("SHAPE P::: ", self.mdp.P.shape)
+        # print("R:::", self.mdp.R)
+        # print("SHAPE R::: ", np.shape(self.mdp.R))
+        # print("GAMMA::: ", self.gamma)
+        # print("SHAPE GAMMA::: ", np.shape(self.gamma))
+        # print("state dict::: ", self.mdp._state_dict)
+        # print("POLICY[STATE,:]::: ", policy[0, :])
+        # print("POLICY shape::: ", policy.shape)
         return policy
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
@@ -216,7 +216,7 @@ class PolicyIteration(MDPSolver):
             It is indexed as (State) where V[State] is the value of state 'State'
         """
         V = np.zeros(self.state_dim)
-        theta = 1E-06
+
         ### PUT YOUR CODE HERE ###
         print("POLICY ITER - POL EVAL")
         #create list of all state keys
@@ -224,7 +224,7 @@ class PolicyIteration(MDPSolver):
         #get terminal state indices
         terminal_state_idx = [self.mdp._state_dict.get(key) for key in self.mdp.terminal_states]
         # get non terminal state indices
-        non_terminal_idx = [ i for i in state_index if i not in terminal_state_idx] 
+        non_terminal_idx = [ i for i in state_index if i not in terminal_state_idx]
         
         # get variables from mdp
         num_of_actions = self.action_dim 
@@ -241,8 +241,9 @@ class PolicyIteration(MDPSolver):
                 # Loop for each actions
                 for action in range(self.action_dim):
                     
-                    first = np.matmul(policy[state,:], np.transpose(self.mdp.P[state,action,:]))
-                    val_sum = [np.matmul(first, self.mdp.R[state,action,:] + self.gamma * V ) ]
+                    first = np.matmul(policy[state,action], np.transpose(self.mdp.P[state,action,:]))
+                    print("FIRST::: ", first)
+                    val_sum = np.multiply(first,self.mdp.R[state,action,:] + self.gamma * V )
                     V[state] = np.max(val_sum)
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
@@ -277,18 +278,50 @@ class PolicyIteration(MDPSolver):
         ### PUT YOUR CODE HERE ###
         print("POLICY ITER - POL IMPROV")
 
-        policy_compare = np.zeros([self.state_dim, self.action_dim])
-        policy_stable = True 
+        policy_stable = True
 
+        # while(policy_stable == False):
+            
         for state in range(len(V)):
             old_action = policy[state, :] 
             index = np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])    
             policy[state, index] = 1
 
-            if np.array_equal(old_action,policy[state,:]): # naming! 
+            if np.array_equal(old_action,policy[state,:])== False: # naming! 
                 policy_stable = False
-                print("plicy stable = false")
+                print("plicy stable = true")
+        if policy_stable == False:
                 V = self._policy_eval(policy)
+        
+                
+            # if policy_stable == False:
+            #     # V = self._policy_eval(policy)
+            #     # get variables from mdp
+            #     num_of_actions = self.action_dim 
+            #     c = np.full(self.state_dim, self.mdp.theta)
+                
+            #     # while the deltas are greater than theta
+            #     while np.any(c) >= self.mdp.theta:
+            #         delta = np.zeros(self.state_dim)
+            #         # Loop over all states
+            #         for state in range(self.state_dim):
+            #             #delta<--0
+            #             v = V[state]
+            #             # Loop for each actions
+            #             for action in range(self.action_dim):
+                            
+            #                 first = np.matmul(policy[:,action], np.transpose(self.mdp.P[state,action,:]))
+            #                 print("FIRST::: ", first)
+            #                 val_sum = np.multiply(first,self.mdp.R[state,action,:] + self.gamma * V )
+            #                 V[state] = np.max(val_sum)
+
+            #             delta[state] = np.max([delta[state], np.abs(v - V[state])])
+            #             c[state] = delta[state]
+
+
+
+
+
         print("POLICY PRINT:::", policy)
         # raise NotImplementedError("Needed for Q1")
         return policy, V
