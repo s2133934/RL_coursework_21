@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import copy
 from typing import List, Tuple, Dict, Optional, Hashable
 
 from rl2021.utils import MDP, Transition, State, Action
@@ -32,12 +33,12 @@ class MDPSolver(ABC):
     def decode_policy(self, policy: Dict[int, np.ndarray]) -> Dict[State, Action]:
         """Generates greedy, deterministic policy dict
 
-        Given a stochastic policy from state indeces to distribution over actions, the greedy,
-        deterministic policy is generated choosing the action with highest probability
+            Given a stochastic policy from state indeces to distribution over actions, the greedy,
+            deterministic policy is generated choosing the action with highest probability
 
-        :param policy (Dict[int, np.ndarray of float with dim (num of actions)]):
-            stochastic policy assigning a distribution over actions to each state index
-        :return (Dict[State, Action]): greedy, deterministic policy from states to actions
+            :param policy (Dict[int, np.ndarray of float with dim (num of actions)]):
+                stochastic policy assigning a distribution over actions to each state index
+            :return (Dict[State, Action]): greedy, deterministic policy from states to actions
         """
         new_p = {}
         for state, state_idx in self.mdp._state_dict.items():
@@ -58,24 +59,24 @@ class ValueIteration(MDPSolver):
     def _calc_value_func(self, theta: float) -> np.ndarray:
         """Calculates the value function
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
+            **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
 
-        **DO NOT ALTER THE MDP HERE**
+            **DO NOT ALTER THE MDP HERE**
 
-        Useful Variables:
-        1. `self.mpd` -- Gives access to the MDP.
-        2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
-            E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
-            2) can be accessed with `self.R[3, 2, 4]`
-        3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
-            *REMEMBER*: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
-            E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
-            state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
+            Useful Variables:
+            1. `self.mpd` -- Gives access to the MDP.
+            2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
+                E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
+                2) can be accessed with `self.R[3, 2, 4]`
+            3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
+                *REMEMBER*: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
+                E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
+                state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
 
-        :param theta (float): theta is the stop threshold for value iteration
-        :return (np.ndarray of float with dim (num of states)):
-            1D NumPy array with the values of each state.
-            E.g. V[3] returns the computed value for state 3
+            :param theta (float): theta is the stop threshold for value iteration
+            :return (np.ndarray of float with dim (num of states)):
+                1D NumPy array with the values of each state.
+                E.g. V[3] returns the computed value for state 3
         """ 
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
@@ -91,17 +92,21 @@ class ValueIteration(MDPSolver):
         num_of_actions = self.action_dim 
         c = np.full(self.state_dim, theta)
         c[terminal_state_idx] = 0
-        i=0
+        
         # while the deltas are greater than theta
         while np.any(c) >= theta:
-            i+=1
+            
             delta = np.zeros(self.state_dim)
             # Loop over all states
             for state in range(self.state_dim):
                 #delta<--0
                 v = V[state]
                 # Loop for each actions
-                val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(self.action_dim)]
+                val_sum=[]
+                for action in range(self.action_dim):
+                    val_sum.append(np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )))
+
+                # val_sum = [np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V )) for action in range(self.action_dim)]
                 V[state] = np.max(val_sum)
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
@@ -126,19 +131,19 @@ class ValueIteration(MDPSolver):
     def _calc_policy(self, V: np.ndarray) -> np.ndarray:
         """Calculates the policy
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
+            **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
 
-        :param V (np.ndarray of float with dim (num of states)):
-            A 1D NumPy array that encodes the computed value function (from _calc_value_func(...))
-            It is indexed as (State) where V[State] is the value of state 'State'
-        :return (np.ndarray of float with dim (num of states, num of actions):
-            A 2D NumPy array that encodes the calculated policy.
-            It is indexed as (STATE, ACTION) where policy[STATE, ACTION] has the probability of
-            taking action 'ACTION' in state 'STATE'.
-            REMEMBER: the sum of policy[STATE, :] should always be 1.0
-            For deterministic policies the following holds for each state S:
-            policy[S, BEST_ACTION] = 1.0
-            policy[S, OTHER_ACTIONS] = 0
+            :param V (np.ndarray of float with dim (num of states)):
+                A 1D NumPy array that encodes the computed value function (from _calc_value_func(...))
+                It is indexed as (State) where V[State] is the value of state 'State'
+            :return (np.ndarray of float with dim (num of states, num of actions):
+                A 2D NumPy array that encodes the calculated policy.
+                It is indexed as (STATE, ACTION) where policy[STATE, ACTION] has the probability of
+                taking action 'ACTION' in state 'STATE'.
+                REMEMBER: the sum of policy[STATE, :] should always be 1.0
+                For deterministic policies the following holds for each state S:
+                policy[S, BEST_ACTION] = 1.0
+                policy[S, OTHER_ACTIONS] = 0
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         ### PUT YOUR CODE HERE ###
@@ -161,9 +166,9 @@ class ValueIteration(MDPSolver):
                 # policy[state, argmax_found ] =  1
 
         # raise NotImplementedError("Needed for Q1")
-        # print("V:::", V)
+        print("V:::", V)
         # print("P:::", self.mdp.P)
-        # print("SHAPE P::: ", self.mdp.P.shape)
+        print("SHAPE P::: ", self.mdp.P[1,1,:])
         # print("R:::", self.mdp.R)
         # print("SHAPE R::: ", np.shape(self.mdp.R))
         # print("GAMMA::: ", self.gamma)
@@ -171,6 +176,7 @@ class ValueIteration(MDPSolver):
         # print("state dict::: ", self.mdp._state_dict)
         # print("POLICY[STATE,:]::: ", policy[0, :])
         # print("POLICY shape::: ", policy.shape)
+
         return policy
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
@@ -201,7 +207,7 @@ class PolicyIteration(MDPSolver):
     def _policy_eval(self, policy: np.ndarray) -> np.ndarray:
         """Computes one policy evaluation step
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
+        *YOU MUST IMPLEMENT THIS FUNCTION FOR Q1*
 
         :param policy (np.ndarray of float with dim (num of states, num of actions)):
             A 2D NumPy array that encodes the policy.
@@ -216,115 +222,94 @@ class PolicyIteration(MDPSolver):
             It is indexed as (State) where V[State] is the value of state 'State'
         """
         V = np.zeros(self.state_dim)
-
+        print("start policy eval")
         ### PUT YOUR CODE HERE ###
-        print("POLICY ITER - POL EVAL")
-        #create list of all state keys
-        state_index = [self.mdp._state_dict.get(key) for key in self.mdp.states] 
-        #get terminal state indices
-        terminal_state_idx = [self.mdp._state_dict.get(key) for key in self.mdp.terminal_states]
-        # get non terminal state indices
-        non_terminal_idx = [ i for i in state_index if i not in terminal_state_idx]
-        
-        # get variables from mdp
-        num_of_actions = self.action_dim 
-        c = np.full(self.state_dim, theta)
-        c[terminal_state_idx] = 0
-        
-        # while the deltas are greater than theta
-        while np.any(c) >= theta:
+        delta_compare = np.full(self.state_dim, self.theta)
+        while np.any(delta_compare) >= self.theta:
             delta = np.zeros(self.state_dim)
-            # Loop over all states
             for state in range(self.state_dim):
-                #delta<--0
+                #print("is in state?")
                 v = V[state]
-                # Loop for each actions
+                first = []
                 for action in range(self.action_dim):
-                    
-                    first = np.matmul(policy[state,action], np.transpose(self.mdp.P[state,action,:]))
-                    print("FIRST::: ", first)
-                    val_sum = np.multiply(first,self.mdp.R[state,action,:] + self.gamma * V )
-                    V[state] = np.max(val_sum)
+                    #print("this is:")
+                    #print(self.mdp.P[state,action,:])
+                    first.append(np.multiply(policy[state,action],np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V ))))
+                    #print("is in action?")
+                   
+                V[state] = np.sum(first)
+                #print(V[state])
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
-                c[state] = delta[state]
-
-        print("V::: ", np.array(V))
-        print("policy[state,:] :::", policy[state,:])
-        # raise NotImplementedError("Needed for Q1")
+                delta_compare[state] = delta[state] 
+           
+        print("i finish while?")
+        print(V)
+        #raise NotImplementedError("Needed for Q1")
         return np.array(V)
 
     def _policy_improvement(self) -> Tuple[np.ndarray, np.ndarray]:
         """Computes one policy improvement iteration
 
-            **YOU MUST IMPLEMENT THIS FUNCTION FOR Q1**
+        *YOU MUST IMPLEMENT THIS FUNCTION FOR Q1*
 
-            Useful Variables (As with Value Iteration):
-            1. `self.mpd` -- Gives access to the MDP.
-            2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
-                E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
-                2) can be accessed with `self.R[3, 2, 4]`
-            3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
-                *REMEMBER*: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
-                E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
-                state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
+        Useful Variables (As with Value Iteration):
+        1. `self.mpd` -- Gives access to the MDP.
+        2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
+            E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
+            2) can be accessed with `self.R[3, 2, 4]`
+        3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
+            REMEMBER: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
+            E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
+            state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
 
-            :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
-                        np.ndarray of float with dim (num of states)):
-                Tuple of calculated policy and value function
+        :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
+                       np.ndarray of float with dim (num of states)):
+            Tuple of calculated policy and value function
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         V = np.zeros([self.state_dim])
-        ### PUT YOUR CODE HERE ###
-        print("POLICY ITER - POL IMPROV")
-
-        policy_stable = True
-
-        # while(policy_stable == False):
-            
-        for state in range(len(V)):
-            old_action = policy[state, :] 
-            index = np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])    
-            policy[state, index] = 1
-
-            if np.array_equal(old_action,policy[state,:])== False: # naming! 
-                policy_stable = False
-                print("plicy stable = true")
-        if policy_stable == False:
-                V = self._policy_eval(policy)
         
+        ### PUT YOUR CODE HERE ###
+        policy_stable = True
+        print(policy_stable)
+        while policy_stable == True:
+            #print("start while")
+            policy_stable = True
+            for state in range(self.state_dim):
+                #print("start for state")
+                old_action = copy.deepcopy(policy[state, :])
+                #print("start old action", old_action)
                 
-            # if policy_stable == False:
-            #     # V = self._policy_eval(policy)
-            #     # get variables from mdp
-            #     num_of_actions = self.action_dim 
-            #     c = np.full(self.state_dim, self.mdp.theta)
+                first = []              
+                for action in range(self.action_dim):
+                    first.append(np.matmul(self.mdp.P[state,action,:],np.transpose(self.mdp.R[state,action,:] + self.gamma * V))) 
+                    
+                index = np.argmax(first)
+                policy[state, index] = 1
+                print("new policy",policy[state,:]) #[1,0,0]
                 
-            #     # while the deltas are greater than theta
-            #     while np.any(c) >= self.mdp.theta:
-            #         delta = np.zeros(self.state_dim)
-            #         # Loop over all states
-            #         for state in range(self.state_dim):
-            #             #delta<--0
-            #             v = V[state]
-            #             # Loop for each actions
-            #             for action in range(self.action_dim):
-                            
-            #                 first = np.matmul(policy[:,action], np.transpose(self.mdp.P[state,action,:]))
-            #                 print("FIRST::: ", first)
-            #                 val_sum = np.multiply(first,self.mdp.R[state,action,:] + self.gamma * V )
-            #                 V[state] = np.max(val_sum)
-
-            #             delta[state] = np.max([delta[state], np.abs(v - V[state])])
-            #             c[state] = delta[state]
-
-
-
-
-
-        print("POLICY PRINT:::", policy)
-        # raise NotImplementedError("Needed for Q1")
+                print("i chabge?")
+                print("new old action",old_action) #[0,0,0]
+                
+                if np.array_equal(old_action,policy[state,:]) == False:
+                #if old_action != policy[state,:]:
+                    policy_stable = False
+                else:
+                    policy_stable = True
+                    #print(policy_stable)
+                    
+            print("my policy",policy)
+            #print("old policy",old_action)
+            #print("new policy", policy)
+            if policy_stable == False:
+                V = self._policy_eval(policy)
+       
+        
         return policy, V
+        
+        #raise NotImplementedError("Needed for Q1")
+        
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
         """Solves the MDP
@@ -333,7 +318,7 @@ class PolicyIteration(MDPSolver):
         policy improvement function that the student must implement
         and returns the solution
 
-        **DO NOT CHANGE THIS FUNCTION**
+        *DO NOT CHANGE THIS FUNCTION*
 
         :param theta (float, optional): stop threshold, defaults to 1e-6
         :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
