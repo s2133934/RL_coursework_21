@@ -77,7 +77,8 @@ class ValueIteration(MDPSolver):
             :return (np.ndarray of float with dim (num of states)):
                 1D NumPy array with the values of each state.
                 E.g. V[3] returns the computed value for state 3
-        """ 
+        """
+        print("Entering ValIter - calc val func") 
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
 
@@ -145,6 +146,7 @@ class ValueIteration(MDPSolver):
                 policy[S, BEST_ACTION] = 1.0
                 policy[S, OTHER_ACTIONS] = 0
         """
+        print("Entering ValIter - calc policy")
         policy = np.zeros([self.state_dim, self.action_dim])
         ### PUT YOUR CODE HERE ###
         # n, p, r, g = self.action_dim, self.mdp.P, self.mdp.R, self.gamma
@@ -155,6 +157,7 @@ class ValueIteration(MDPSolver):
         # for state in (self.mdp._state_dict.keys()):
         for state in range(len(V)):
 
+            
             index = np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])    
             policy[state, index] = 1
 
@@ -207,42 +210,43 @@ class PolicyIteration(MDPSolver):
     def _policy_eval(self, policy: np.ndarray) -> np.ndarray:
         """Computes one policy evaluation step
 
-        *YOU MUST IMPLEMENT THIS FUNCTION FOR Q1*
+            *YOU MUST IMPLEMENT THIS FUNCTION FOR Q1*
 
-        :param policy (np.ndarray of float with dim (num of states, num of actions)):
-            A 2D NumPy array that encodes the policy.
-            It is indexed as (STATE, ACTION) where policy[STATE, ACTION] has the probability of
-            taking action 'ACTION' in state 'STATE'.
-            REMEMBER: the sum of policy[STATE, :] should always be 1.0
-            For deterministic policies the following holds for each state S:
-            policy[S, BEST_ACTION] = 1.0
-            policy[S, OTHER_ACTIONS] = 0
-        :return (np.ndarray of float with dim (num of states)): 
-            A 1D NumPy array that encodes the computed value function
-            It is indexed as (State) where V[State] is the value of state 'State'
+            :param policy (np.ndarray of float with dim (num of states, num of actions)):
+                A 2D NumPy array that encodes the policy.
+                It is indexed as (STATE, ACTION) where policy[STATE, ACTION] has the probability of
+                taking action 'ACTION' in state 'STATE'.
+                REMEMBER: the sum of policy[STATE, :] should always be 1.0
+                For deterministic policies the following holds for each state S:
+                policy[S, BEST_ACTION] = 1.0
+                policy[S, OTHER_ACTIONS] = 0
+            :return (np.ndarray of float with dim (num of states)): 
+                A 1D NumPy array that encodes the computed value function
+                It is indexed as (State) where V[State] is the value of state 'State'
         """
+        print("Entering PolicyIter - Policy Evaluation")
         V = np.zeros(self.state_dim)
-        print("start policy eval")
         ### PUT YOUR CODE HERE ###
         delta_compare = np.full(self.state_dim, self.theta)
+        i=0
         while np.any(delta_compare) >= self.theta:
+            i+=1
             delta = np.zeros(self.state_dim)
             for state in range(self.state_dim):
-                #print("is in state?")
+
                 v = V[state]
                 first = []
                 for action in range(self.action_dim):
-                    #print("this is:")
-                    #print(self.mdp.P[state,action,:])
-                    first.append(np.multiply(policy[state,action],np.matmul(self.mdp.P[state,action,:], np.transpose(self.mdp.R[state,action,:] + self.gamma * V ))))
-                    #print("is in action?")
+
+                    transpose_var = np.transpose(self.mdp.R[state,action,:] + self.gamma * V )
+                    matmul_var = np.matmul(self.mdp.P[state,action,:], transpose_var)
+                    first.append(np.multiply(policy[state,action], matmul_var))
                    
                 V[state] = np.sum(first)
-                #print(V[state])
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
                 delta_compare[state] = delta[state] 
-           
+            print("evaluations i=", i)
         print("i finish while?")
         print(V)
         #raise NotImplementedError("Needed for Q1")
@@ -251,35 +255,38 @@ class PolicyIteration(MDPSolver):
     def _policy_improvement(self) -> Tuple[np.ndarray, np.ndarray]:
         """Computes one policy improvement iteration
 
-        *YOU MUST IMPLEMENT THIS FUNCTION FOR Q1*
+            *YOU MUST IMPLEMENT THIS FUNCTION FOR Q1*
 
-        Useful Variables (As with Value Iteration):
-        1. `self.mpd` -- Gives access to the MDP.
-        2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
-            E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
-            2) can be accessed with `self.R[3, 2, 4]`
-        3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
-            REMEMBER: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
-            E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
-            state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
+            Useful Variables (As with Value Iteration):
+            1. `self.mpd` -- Gives access to the MDP.
+            2. `self.mdp.R` -- 3D NumPy array with the rewards for each transition.
+                E.g. the reward of transition [3] -2-> [4] (going from state 3 to state 4 with action
+                2) can be accessed with `self.R[3, 2, 4]`
+            3. `self.mdp.P` -- 3D NumPy array with transition probabilities.
+                REMEMBER: the sum of (STATE, ACTION, :) should be 1.0 (all actions lead somewhere)
+                E.g. the transition probability of transition [3] -2-> [4] (going from state 3 to
+                state 4 with action 2) can be accessed with `self.P[3, 2, 4]`
 
-        :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
-                       np.ndarray of float with dim (num of states)):
-            Tuple of calculated policy and value function
+            :return (Tuple[np.ndarray of float with dim (num of states, num of actions),
+                        np.ndarray of float with dim (num of states)):
+                Tuple of calculated policy and value function
         """
+        print("Entering PolicyIter - Policy Improvement")
         policy = np.zeros([self.state_dim, self.action_dim])
+        old_action = np.zeros([self.state_dim, self.action_dim])
+        
         V = np.zeros([self.state_dim])
         
         ### PUT YOUR CODE HERE ###
-        policy_stable = True
+        policy_stable = False
         print(policy_stable)
-        while policy_stable == True:
-            #print("start while")
-            policy_stable = True
+        i=0
+        while policy_stable == False:
+            i+=1
+            policy = np.zeros([self.state_dim, self.action_dim])
+            # policy_stable = True
             for state in range(self.state_dim):
-                #print("start for state")
-                old_action = copy.deepcopy(policy[state, :])
-                #print("start old action", old_action)
+                old_action[state] = policy[state, :]
                 
                 first = []              
                 for action in range(self.action_dim):
@@ -287,21 +294,17 @@ class PolicyIteration(MDPSolver):
                     
                 index = np.argmax(first)
                 policy[state, index] = 1
-                print("new policy",policy[state,:]) #[1,0,0]
+                # print("new policy",policy[state,:]) #[1,0,0]
                 
-                print("i chabge?")
-                print("new old action",old_action) #[0,0,0]
+                # print("i chabge?")
+                # print("new old action",old_action) #[0,0,0]
                 
                 if np.array_equal(old_action,policy[state,:]) == False:
-                #if old_action != policy[state,:]:
                     policy_stable = False
-                else:
-                    policy_stable = True
-                    #print(policy_stable)
                     
-            print("my policy",policy)
-            #print("old policy",old_action)
-            #print("new policy", policy)
+            print("my policy", policy)
+            print("improvements i = ", i)
+
             if policy_stable == False:
                 V = self._policy_eval(policy)
        

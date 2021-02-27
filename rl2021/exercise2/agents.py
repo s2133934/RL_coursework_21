@@ -55,10 +55,17 @@ class Agent(ABC):
             received observation representing the current environmental state
         :return (int): index of selected action
         """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
-        ### RETURN AN ACTION HERE ###
-        return -1
+        # print("Im in Agent class - act function")
+        
+        act_vals = [self.q_table[(obs, act)] for act in range(self.n_acts)]
+        max_val = max(act_vals)
+        max_acts = [idx for idx, act_val in enumerate(act_vals) if act_val == max_val]
+
+        if random.random() < self.epsilon:
+            return random.randint(0, self.n_acts - 1) # choose random integer between 0 and n_acts-1 / EXPLORE
+        else:
+            return random.choice(max_acts) # Choose randomly between actions of max value - EXPLOIT
+
 
     @abstractmethod
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
@@ -95,7 +102,12 @@ class QLearningAgent(Agent):
         self.alpha: float = alpha
 
     def learn(
-        self, obs: np.ndarray, action: int, reward: float, n_obs: np.ndarray, done: bool
+        self, 
+        obs: np.ndarray, 
+        action: int, 
+        reward: float, 
+        n_obs: np.ndarray, 
+        done: bool
     ) -> float:
         """Updates the Q-table based on agent experience
 
@@ -107,11 +119,25 @@ class QLearningAgent(Agent):
         :param reward (float): received reward
         :param n_obs (np.ndarray of float with dim (observation size)):
             received observation representing the next environmental state
+
         :param done (bool): flag indicating whether a terminal state has been reached
         :return (float): updated Q-value for current observation-action pair
         """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        # print('Im in Q learning Agent - learn functino')
+
+        act_vals = [self.q_table[(obs, act)] for act in range(self.n_acts)]
+        max_val = max(act_vals)
+        max_acts = [idx for idx, act_val in enumerate(act_vals) if act_val == max_val]
+        n_action = random.choice(max_acts)
+        # n_action (single integer):
+        # action chosen by taking the maximum action values in q_table for a the next state
+    
+        target_value = reward + self.gamma * (1 - done) * self.q_table[(n_obs, n_action)]
+        self.q_table[(obs, action)] += self.alpha * (
+            target_value - self.q_table[(obs, action)]
+        )
+
+        # raise NotImplementedError("Needed for Q2")
         return self.q_table[(obs, action)]
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
@@ -124,9 +150,14 @@ class QLearningAgent(Agent):
 
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
+
+        returns: none (only updates parameters)
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        
+        self.epsilon = 1.0-(min(1.0, timestep/(0.07*max_timestep)))*0.95
+
+        # raise NotImplementedError("Needed for Q2")
 
 
 class MonteCarloAgent(Agent):
@@ -179,3 +210,7 @@ class MonteCarloAgent(Agent):
         """
         ### PUT YOUR CODE HERE ###
         raise NotImplementedError("Needed for Q2")
+
+# if __name__ == "__main__":
+    # print('Script found')
+    # Agent().act(np.array([0,0]))
