@@ -13,7 +13,7 @@ CONFIG = {
     "eval_episodes": 500,
     "eval_freq": 1000,
     "gamma": 0.99,
-    "alpha": 0.5,
+    "alpha": 1.0,
     "epsilon": 0.0,
 }
 

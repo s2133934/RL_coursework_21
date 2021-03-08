@@ -155,13 +155,15 @@ class QLearningAgent(Agent):
         """
         ### PUT YOUR CODE HERE ###
         
-        self.epsilon = 1.0-(min(1.0, timestep/(0.07*max_timestep)))*0.95
+        decay_epsilon = 0.07
+        self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.95
 
         # raise NotImplementedError("Needed for Q2")
 
 
 class MonteCarloAgent(Agent):
-    """Agent using the Monte-Carlo algorithm for training
+    """
+    Agent using the Monte-Carlo algorithm for training
     """
 
     def __init__(self, **kwargs):
@@ -178,7 +180,8 @@ class MonteCarloAgent(Agent):
     def learn(
         self, obses: List[np.ndarray], actions: List[int], rewards: List[float]
     ) -> Dict:
-        """Updates the Q-table based on agent experience
+        """
+        Updates the Q-table based on agent experience
 
         **YOU MUST IMPLEMENT THIS FUNCTION FOR Q2**
 
@@ -189,13 +192,45 @@ class MonteCarloAgent(Agent):
             order they were applied)
         :param rewards (List[float]): list of received rewards during trajectory (in the order
             they were received)
+
         :return (Dict): A dictionary containing the updated Q-value of all the updated state-action pairs
             indexed by the state action pair.
         """
         updated_values = {}
+        #  updated_values[state,action].append(newValue)
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
-        return updated_values
+        G = 0 #start with gains/
+        returns = []
+        #create an episode, and denote episode[i] as a step = [S,A,R]
+        episode = [ [obses[i],actions[i],rewards[i]] for i in range(len(rewards)) ]
+
+        print('episode == ', episode)
+        print('obses == \n', obses, '\n len(obses) == ', len(obses))
+        print('actions == \n', actions, '\n len(actions) == ', len(actions))
+        print('rewards == \n', rewards, '\n len(rewards) == ', len(rewards))
+        print(len(self.q_table)) 
+
+        #for all encountered states
+        for i in range(len(obses)):
+            G = self.gamma*G + rewards[i]
+
+            if obses[state] not in [x for x in obses[::-1]] == True:
+                pass
+
+
+        # for i, step in enumerate(episode[::-1]):
+        #     G = self.gamma*G + step[2]
+
+        #     if step[0] not in [x[0] for x in episode[::-1][len(episode)-i:]]:
+        #         idx = (step[0][0], step[0][1])
+        #         returns[idx].append(G)
+        #         self.q_table[(obs, action)] = np.average(returns[idx])
+        #         # newValue = np.average(returns[idx])
+
+        #         updated_values[idx[0], idx[1]] = newValue
+
+        # raise NotImplementedError("Needed for Q2")
+        # return updated_values
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
         """Updates the hyperparameters
@@ -209,7 +244,7 @@ class MonteCarloAgent(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        # raise NotImplementedError("Needed for Q2")
 
 # if __name__ == "__main__":
     # print('Script found')
