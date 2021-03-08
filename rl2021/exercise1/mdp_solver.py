@@ -151,12 +151,9 @@ class ValueIteration(MDPSolver):
         ### PUT YOUR CODE HERE ###
         # n, p, r, g = self.action_dim, self.mdp.P, self.mdp.R, self.gamma
         # Get values from V = (high,low) = [6.5, 5.8]
-
         # calc_values = np.zeros([self.statet_dim, self.action_dim])
-
         # for state in (self.mdp._state_dict.keys()):
         for state in range(len(V)):
-
             
             index = np.argmax([np.matmul(self.mdp.P[state, action, :], np.transpose(self.mdp.R[state,action,:] + self.gamma * V)) for action in range(self.action_dim)])    
             policy[state, index] = 1
@@ -228,9 +225,9 @@ class PolicyIteration(MDPSolver):
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
         delta_compare = np.full(self.state_dim, self.theta)
-        i=0
+        # i=0
         while np.any(delta_compare) >= self.theta:
-            i+=1
+            # i+=1
             delta = np.zeros(self.state_dim)
             for state in range(self.state_dim):
 
@@ -246,8 +243,8 @@ class PolicyIteration(MDPSolver):
 
                 delta[state] = np.max([delta[state], np.abs(v - V[state])])
                 delta_compare[state] = delta[state] 
-            print("evaluations i=", i)
-        print("i finish while?")
+            # print("evaluations i=", i)
+        # print("i finish while")
         print(V)
         #raise NotImplementedError("Needed for Q1")
         return np.array(V)
@@ -273,17 +270,16 @@ class PolicyIteration(MDPSolver):
         """
         print("Entering PolicyIter - Policy Improvement")
         policy = np.zeros([self.state_dim, self.action_dim])
-        old_action = np.zeros([self.state_dim, self.action_dim])
         
         V = np.zeros([self.state_dim])
         
         ### PUT YOUR CODE HERE ###
+        old_action = np.zeros([self.state_dim, self.action_dim])
         policy_stable = False
         print(policy_stable)
         i=0
         while policy_stable == False:
             i+=1
-            policy = np.zeros([self.state_dim, self.action_dim])
             # policy_stable = True
             for state in range(self.state_dim):
                 old_action[state] = policy[state, :]
@@ -293,17 +289,20 @@ class PolicyIteration(MDPSolver):
                     first.append(np.matmul(self.mdp.P[state,action,:],np.transpose(self.mdp.R[state,action,:] + self.gamma * V))) 
                     
                 index = np.argmax(first)
+                policy[state,:] = 0 # deterministic policy
                 policy[state, index] = 1
                 # print("new policy",policy[state,:]) #[1,0,0]
                 
                 # print("i chabge?")
                 # print("new old action",old_action) #[0,0,0]
                 
-                if np.array_equal(old_action,policy[state,:]) == False:
-                    policy_stable = False
+            if np.array_equal(old_action,policy[state,:]) == False:
+                policy_stable = False
+            else:
+                policy_stable = True
                     
-            print("my policy", policy)
-            print("improvements i = ", i)
+            # print("my policy", policy)
+            # print("improvements i = ", i)
 
             if policy_stable == False:
                 V = self._policy_eval(policy)
