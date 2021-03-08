@@ -277,9 +277,9 @@ class PolicyIteration(MDPSolver):
         old_action = np.zeros([self.state_dim, self.action_dim])
         policy_stable = False
         print(policy_stable)
-        i=0
+        # i=0
         while policy_stable == False:
-            i+=1
+            # i+=1
             # policy_stable = True
             for state in range(self.state_dim):
                 old_action[state] = policy[state, :]
@@ -296,7 +296,7 @@ class PolicyIteration(MDPSolver):
                 # print("i chabge?")
                 # print("new old action",old_action) #[0,0,0]
                 
-            if np.array_equal(old_action,policy[state,:]) == False:
+            if np.array_equal(old_action,policy) == False:
                 policy_stable = False
             else:
                 policy_stable = True
