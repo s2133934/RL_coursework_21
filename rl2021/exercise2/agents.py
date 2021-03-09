@@ -101,29 +101,22 @@ class QLearningAgent(Agent):
         super().__init__(**kwargs)
         self.alpha: float = alpha
 
-    def learn(
-        self, 
-        obs: np.ndarray, 
-        action: int, 
-        reward: float, 
-        n_obs: np.ndarray, 
-        done: bool
-    ) -> float:
+    def learn(self, obs: np.ndarray, action: int, reward: float, n_obs: np.ndarray, done: bool) -> float:
         """Updates the Q-table based on agent experience
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q2**
+            **YOU MUST IMPLEMENT THIS FUNCTION FOR Q2**
 
-        :param obs (np.ndarray of float with dim (observation size)):
-            received observation representing the current environmental state
-        :param action (int): index of applied action
-        :param reward (float): received reward
-        :param n_obs (np.ndarray of float with dim (observation size)):
-            received observation representing the next environmental state
+            :param obs (np.ndarray of float with dim (observation size)):
+                received observation representing the current environmental state
+            :param action (int): index of applied action
+            :param reward (float): received reward
+            :param n_obs (np.ndarray of float with dim (observation size)):
+                received observation representing the next environmental state
 
-        :param done (bool): flag indicating whether a terminal state has been reached
-        :return (float): updated Q-value for current observation-action pair
+            :param done (bool): flag indicating whether a terminal state has been reached
+            :return (float): updated Q-value for current observation-action pair
         """
-        # print('Im in Q learning Agent - learn functino')
+        # print('Im in Q learning Agent - learn function')
 
         act_vals = [self.q_table[(obs, act)] for act in range(self.n_acts)]
         max_val = max(act_vals)
@@ -177,9 +170,8 @@ class MonteCarloAgent(Agent):
         super().__init__(**kwargs)
         self.sa_counts = {}
 
-    def learn(
-        self, obses: List[np.ndarray], actions: List[int], rewards: List[float]
-    ) -> Dict:
+    def learn(self, obses: List[np.ndarray], actions: List[int], rewards: List[float]) -> Dict:
+
         """
         Updates the Q-table based on agent experience
 
@@ -187,36 +179,68 @@ class MonteCarloAgent(Agent):
 
         :param obses (List(np.ndarray) with numpy arrays of float with dim (observation size)):
             list of received observations representing environmental states of trajectory (in
-            the order they were encountered)
+            the order they were encountered) 
         :param actions (List[int]): list of indices of applied actions in trajectory (in the
             order they were applied)
         :param rewards (List[float]): list of received rewards during trajectory (in the order
             they were received)
 
-        :return (Dict): A dictionary containing the updated Q-value of all the updated state-action pairs
-            indexed by the state action pair.
+        :return (Dict): (for me "updated_values") A dictionary containing the updated Q-value of all the 
+        updated state-action pairs indexed by the state action pair.
         """
         updated_values = {}
         #  updated_values[state,action].append(newValue)
         ### PUT YOUR CODE HERE ###
-        G = 0 #start with gains/
+        G = 0 #start with gains=0
         returns = []
         #create an episode, and denote episode[i] as a step = [S,A,R]
         episode = [ [obses[i],actions[i],rewards[i]] for i in range(len(rewards)) ]
+        episode_sa_pairs = [ [obses[i],actions[i]] for i in range(len(rewards)) ] 
 
         print('episode == ', episode)
-        print('obses == \n', obses, '\n len(obses) == ', len(obses))
-        print('actions == \n', actions, '\n len(actions) == ', len(actions))
-        print('rewards == \n', rewards, '\n len(rewards) == ', len(rewards))
-        print(len(self.q_table)) 
+        # print('obses == \n', obses, '\n len(obses) == ', len(obses))
+        # print('actions == \n', actions, '\n len(actions) == ', len(actions))
+        # print('rewards == \n', rewards, '\n len(rewards) == ', len(rewards))
+        print('length q_table == ', len(self.q_table)) 
+        # print('sa_counts == ', self.sa_counts)
 
-        #for all encountered states
-        for i in range(len(obses)):
-            G = self.gamma*G + rewards[i]
+        current_state = 0
+        current_action = 0
+        #for all steps of the episode (uses obses as same length as actions and rewards)
+        k=0
+        for current_step in range(len(obses)):
+            G = self.gamma * G + rewards[current_step]
+            print('G == ', G)            
+            # if state of current step doesnt appear in the rest of the list (which is reversed) 
+            # then it is the first time that state is encountered (tested in terminal)
+            # if obses[current_step] not in [x for x in obses[::-1]][current_step+1:] == True:
+            # edit: must be the sa pair, not just the state in obses, so created a list of the sa pairs 
+            # in episode - tested in terminal
 
-            if obses[state] not in [x for x in obses[::-1]] == True:
-                pass
+            if episode_sa_pairs[current_step] not in [x for x in episode_sa_pairs[::-1]][current_step+1:] == True:
+                k+=1
+                print('found a first instance .... ')
+                current_state = episode_sa_pairs[current_step][0] 
+                current_action = episode_sa_pairs[current_step][1]
+                key = (current_state,current_action)
+                # returns(state,action).append(G)
+                returns[key].append(G)
+                self.sa_counts[key] += 1
+                # Q(state,action) = average(returns(state,action)) GLOBAL
+                average_running = returns(current_state, current_action) / self.sa_counts[key]
+                
+                self.q_table[key]
 
+                updated_values[key].append(average_running)
+
+                if key not in updated_values:
+                    updated_values[key] = value
+
+                # A_star = np.argmax(Q(state,a)) 
+
+                # This is the epsilon soft bit
+                # for all a in actions:
+                
 
         # for i, step in enumerate(episode[::-1]):
         #     G = self.gamma*G + step[2]
