@@ -189,54 +189,60 @@ class MonteCarloAgent(Agent):
         updated state-action pairs indexed by the state action pair.
         """
         updated_values = {}
-        #  updated_values[state,action].append(newValue)
         ### PUT YOUR CODE HERE ###
         G = 0 #start with gains=0
-        returns = []
+
         #create an episode, and denote episode[i] as a step = [S,A,R]
         episode = [ [obses[i],actions[i],rewards[i]] for i in range(len(rewards)) ]
         episode_sa_pairs = [ [obses[i],actions[i]] for i in range(len(rewards)) ] 
 
-        print('episode == ', episode)
+        # print('episode == ', episode)
         # print('obses == \n', obses, '\n len(obses) == ', len(obses))
         # print('actions == \n', actions, '\n len(actions) == ', len(actions))
         # print('rewards == \n', rewards, '\n len(rewards) == ', len(rewards))
-        print('length q_table == ', len(self.q_table)) 
+        # print('length q_table == ', len(self.q_table)) 
         # print('sa_counts == ', self.sa_counts)
 
-        current_state = 0
-        current_action = 0
         #for all steps of the episode (uses obses as same length as actions and rewards)
-        k=0
+        # k=0
         for current_step in range(len(obses)):
             G = self.gamma * G + rewards[current_step]
-            print('G == ', G)            
+            # print('G == ', G)            
             # if state of current step doesnt appear in the rest of the list (which is reversed) 
             # then it is the first time that state is encountered (tested in terminal)
             # if obses[current_step] not in [x for x in obses[::-1]][current_step+1:] == True:
             # edit: must be the sa pair, not just the state in obses, so created a list of the sa pairs 
             # in episode - tested in terminal
 
-            if episode_sa_pairs[current_step] not in [x for x in episode_sa_pairs[::-1]][current_step+1:] == True:
-                k+=1
-                print('found a first instance .... ')
+            if episode_sa_pairs[current_step] not in [x for x in episode_sa_pairs[::-1]][current_step+1:]:
+                # k+=1
+                # print('found a first instance .... ', current_step)
                 current_state = episode_sa_pairs[current_step][0] 
+                # print('current_State == ', current_state)
                 current_action = episode_sa_pairs[current_step][1]
+                # print('current_action == ', current_action)
                 key = (current_state,current_action)
+                # print('type(key) == ', key)
                 # returns(state,action).append(G)
-                returns[key].append(G)
-                self.sa_counts[key] += 1
+                # returns[current_state].append(G)
+
+                if key not in self.sa_counts.keys():
+                    self.sa_counts[key] = 1
+                    # print('created key in sa_counts')
+                else:
+                    self.sa_counts[key] += 1
+                    # print('found key in sa_counts, adding 1')
+
+                # print('self.sa_counts', self.sa_counts)
+
                 # Q(state,action) = average(returns(state,action)) GLOBAL
-                average_running = returns(current_state, current_action) / self.sa_counts[key]
+                # print('values == ', self.q_table[key], self.sa_counts[key])
+
+                updated_values[key] = self.q_table[key] + ( (G - self.q_table[key]) / self.sa_counts[key] )
                 
-                self.q_table[key]
+                self.q_table[key] = updated_values[key]
 
-                updated_values[key].append(average_running)
-
-                if key not in updated_values:
-                    updated_values[key] = value
-
-                # A_star = np.argmax(Q(state,a)) 
+                # A_star = np.argmax(Q(state,action)) 
 
                 # This is the epsilon soft bit
                 # for all a in actions:
@@ -254,7 +260,7 @@ class MonteCarloAgent(Agent):
         #         updated_values[idx[0], idx[1]] = newValue
 
         # raise NotImplementedError("Needed for Q2")
-        # return updated_values
+        return updated_values
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
         """Updates the hyperparameters
@@ -267,7 +273,9 @@ class MonteCarloAgent(Agent):
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
-        ### PUT YOUR CODE HERE ###
+        decay_epsilon = 0.07
+        self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.95
+
         # raise NotImplementedError("Needed for Q2")
 
 # if __name__ == "__main__":
