@@ -148,11 +148,11 @@ class DQN(Agent):
         self.gamma = gamma
 
         self.epsilon = 1
-        # ##########################################
+        # ########################################## ADDED:::
 
         self.epsilon_initial = 1
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.995 #0.995
 
         self.loss_func = torch.nn.MSELoss()
         # Chose MSE loss as we are characterising the error as the distance between the target and the actual value
@@ -180,8 +180,14 @@ class DQN(Agent):
         ### PUT YOUR CODE HERE ### 
         
         #Set a hard minimum on epsilon to ensure some exploration all of the time and a non negative epsilon!
-        self.episilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
-
+        # self.episilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
+        
+        # https://github.com/adamprice97/cartpole/blob/master/cartpole.py
+        # self.exploration_rate *= EXPLORATION_DECAY
+        self.epsilon *= self.epsilon_decay
+        # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+        self.epsilon = max(self.epsilon_min, self.epsilon)
+        
         # raise NotImplementedError("Needed for Q3")
 
     def act(self, obs: np.ndarray, explore: bool):
@@ -248,7 +254,7 @@ class DQN(Agent):
 
         # Loss Function
         q_loss = self.loss_func(q_current,q_target) #MSELoss(Current Q values, Target Q Values)
-        q_loss.clamp(min=-1,max=1) 
+        q_loss.clamp(min=-1,max=1)
 
         self.critics_optim.zero_grad()
         q_loss.backward()
