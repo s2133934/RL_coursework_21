@@ -46,6 +46,8 @@ class Agent(ABC):
 
         self.q_table: DefaultDict = defaultdict(lambda: 0)
 
+        self.epsilon_initial = self.epsilon ##### CHECK THIS
+
     def act(self, obs: np.ndarray) -> int:
         """Implement the epsilon-greedy action selection here
 
@@ -101,6 +103,7 @@ class QLearningAgent(Agent):
         super().__init__(**kwargs)
         self.alpha: float = alpha
 
+
     def learn(self, obs: np.ndarray, action: int, reward: float, n_obs: np.ndarray, done: bool) -> float:
         """Updates the Q-table based on agent experience
 
@@ -149,8 +152,8 @@ class QLearningAgent(Agent):
         ### PUT YOUR CODE HERE ###
         
         decay_epsilon = 0.07
-        self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.95
-
+        # self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.95
+        self.epsilon = self.epsilon_initial * (1.0 - (min(1.0, timestep / (decay_epsilon * max_timestep))) * 0.95)
         # raise NotImplementedError("Needed for Q2")
 
 
@@ -193,10 +196,14 @@ class MonteCarloAgent(Agent):
         G = 0 #start with gains=0
 
         #create an episode, and denote episode[i] as a step = [S,A,R]
-        episode = [ [obses[i],actions[i],rewards[i]] for i in range(len(rewards)) ]
-        episode_sa_pairs = [ [obses[i],actions[i]] for i in range(len(rewards)) ] 
+        # episode = [ [obses[i],actions[i],rewards[i]] for i in range(len(rewards)) ]
+        episode_sa_pairs = [ (obses[i],actions[i]) for i in range(len(rewards)) ] 
+        sa_pairs_list=[]
+        for i in range(len(obses)):
+            state_action.append((obses[i],actions[i])) 
 
-        # print('episode == ', episode)
+        print('episode_sa_pairs == ', state_action_list)
+        print('episode_sa_pairs == ', episode_sa_pairs)
         # print('obses == \n', obses, '\n len(obses) == ', len(obses))
         # print('actions == \n', actions, '\n len(actions) == ', len(actions))
         # print('rewards == \n', rewards, '\n len(rewards) == ', len(rewards))
@@ -275,6 +282,7 @@ class MonteCarloAgent(Agent):
         """
         decay_epsilon = 0.07
         self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.95
+        # self.epsilon = self.epsilon_initial * (1.0 - (min(1.0, timestep / (decay_epsilon * max_timestep))) * 0.95)
 
         # raise NotImplementedError("Needed for Q2")
 
