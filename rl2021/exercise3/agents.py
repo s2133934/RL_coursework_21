@@ -36,7 +36,7 @@ class Agent(ABC):
         self.action_space = action_space
         self.observation_space = observation_space
 
-        self.saveables = {}
+        self.saveables = {} 
 
     def save(self, path: str, suffix: str = "") -> str:
         """Saves saveable PyTorch models under given path
@@ -131,15 +131,12 @@ class DQN(Agent):
         # ######################################### #
         #  BUILD YOUR NETWORKS AND OPTIMIZERS HERE  #
         # ######################################### #
-        self.critics_net = FCNetwork(
-            (STATE_SIZE, *hidden_size, ACTION_SIZE), output_activation=None
-        )
+        
+        self.critics_net = FCNetwork((STATE_SIZE, *hidden_size, ACTION_SIZE), output_activation=None)
 
         self.critics_target = deepcopy(self.critics_net)
 
-        self.critics_optim = Adam(
-            self.critics_net.parameters(), lr=learning_rate, eps=1e-3
-        )
+        self.critics_optim = Adam(self.critics_net.parameters(), lr=learning_rate, eps=1e-3) 
 
         # ############################################# #
         # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
@@ -151,8 +148,16 @@ class DQN(Agent):
         self.gamma = gamma
 
         self.epsilon = 1
-        # ######################################### #
+        # ##########################################
 
+        self.epsilon_initial = 1
+        self.epsilon_min = 0.01
+        self.epsilon_decay = 0.995
+
+        self.loss_func = torch.nn.MSELoss()
+        # Chose MSE loss as we are characterising the error as the distance between the target and the actual value
+
+        # ###########################################
         self.saveables.update(
             {
                 "critics_net": self.critics_net,
@@ -172,8 +177,12 @@ class DQN(Agent):
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+        ### PUT YOUR CODE HERE ### 
+        
+        #Set a hard minimum on epsilon to ensure some exploration all of the time and a non negative epsilon!
+        self.episilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
+
+        # raise NotImplementedError("Needed for Q3")
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
@@ -189,7 +198,27 @@ class DQN(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+
+        obs = torch.from_numpy(obs)
+        obs = obs.type(torch.FloatTensor)
+
+
+        if explore == True:
+            # Agent follow epsilon greedy policy:
+            if np.random.random() < self.epsilon:
+                # j = np.random.choice(3) 
+                # return np.random.choice(self.action_space)
+                return self.action_space.sample()
+            else:
+                actions = self.critics_net.forward(obs)
+                return torch.argmax(actions).item()
+
+        elif explore == False:
+            # Agent is greedy
+            actions = self.critics_net.forward(obs)
+            return torch.argmax(actions).item()
+
+        # raise NotImplementedError("Needed for Q3")
 
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
@@ -204,8 +233,32 @@ class DQN(Agent):
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
         q_loss = 0.0
+
+        action_batch = batch.actions
+        action_batch = action_batch.type(torch.LongTensor)
+        # Evaluate current Q-values and predicted Q-values
+        q_current = self.critics_net.forward(batch.states).gather(1,action_batch) # shape[10,1]
+
+        q_next = self.critics_target.forward(batch.next_states).detach() # shape[10,2] 
+
+        q_max = torch.max(q_next,dim=1)[0].view(self.batch_size,1) # shape [10] -> [10,1]
+
+        q_target = batch.rewards + self.gamma * ((1-batch.done) * q_max) # shape[10,1]
+
+        # Loss Function
+        q_loss = self.loss_func(q_current,q_target) #MSELoss(Current Q values, Target Q Values)
+        q_loss.clamp(min=-1,max=1) 
+
+        self.critics_optim.zero_grad()
+        q_loss.backward()
+        self.critics_optim.step()
+
+        self.update_counter += 1
+
+        if self.update_counter % self.target_update_freq ==0:
+            self.critics_target.hard_update(self.critics_net)
+       
         return {"q_loss": q_loss}
 
 
