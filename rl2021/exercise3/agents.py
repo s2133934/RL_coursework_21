@@ -340,7 +340,7 @@ class Reinforce(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+        # raise NotImplementedError("Needed for Q3")
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
@@ -355,7 +355,16 @@ class Reinforce(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+
+        obs = torch.tensor(obs, dtype = torch.float32)
+        
+        p = self.policy.forward(obs)
+        # Take a random choice from our probability distribution:
+        sample = np.random.choice(range(self.action_space.n), p= p.detach().numpy(), size = 1)[0]
+
+        return sample
+
+        # raise NotImplementedError("Needed for Q3")
 
     def update(
         self, rewards: List[float], observations: List[np.ndarray], actions: List[int],
@@ -371,7 +380,21 @@ class Reinforce(Agent):
             losses
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+        # raise NotImplementedError("Needed for Q3")
         p_loss = 0.0
-        return {"p_loss": p_loss}
+
+        obs = torch.tensor(np.array(observations), dtype = torch.float32)
+        G=0
+        loss = []
+        for t in range(len(observations)-1,-1,-1):
+            G = self.gamma * G + rewards[t]
+            loss.append(- self.gamma * G * torch.log(self.policy.forward(obs[t])[actions[t]]))
         
+        p_loss = sum(loss)/len(rewards)
+
+        # Reset Gradient
+        self.policy_optim.zero_grad()
+        p_loss.backward()
+        self.policy_optim.step()
+
+        return{"p_loss": loss}
