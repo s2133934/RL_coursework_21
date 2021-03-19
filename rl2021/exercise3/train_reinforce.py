@@ -20,7 +20,7 @@ CARTPOLE_CONFIG = {
     "max_time": 30 * 60,
     "gamma": 0.99,
     "hidden_size": (16,16),
-    "learning_rate": 1e-2,
+    "learning_rate": 1e-3,
     "save_filename": None,
 }
 

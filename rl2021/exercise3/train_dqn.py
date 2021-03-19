@@ -23,7 +23,7 @@ CARTPOLE_CONFIG = {
     "eval_episodes": 5,
     "learning_rate": 0.001, #1e-2, lit indicates 0.001?
     "hidden_size": (128,64),
-    "target_update_freq": 10000, #5000 originally https://adgefficiency.com/dqn-solving/ reasoning
+    "target_update_freq": 500, #5000 originally https://adgefficiency.com/dqn-solving/ reasoning
     "batch_size": 10,
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
@@ -38,7 +38,7 @@ LUNARLANDER_CONFIG = {
     "max_time": 120 * 60,
     "eval_freq": 5000,
     "eval_episodes": 5,  # DECREASING THIS MIGHT REDUCE EVALUATION ACCURACY; BUT MAKES IT EASIER TO SEE HOW THE POLICY EVOLVES OVER TIME (BY ENABLING RENDER ABOVE)
-    "learning_rate": 1e-2,
+    "learning_rate": 1e-3,
     "hidden_size": (128, 64),
     "target_update_freq": 5000,
     "batch_size": 10,

@@ -184,9 +184,11 @@ class DQN(Agent):
         
         # https://github.com/adamprice97/cartpole/blob/master/cartpole.py
         # self.exploration_rate *= EXPLORATION_DECAY
-        self.epsilon *= self.epsilon_decay
-        # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-        self.epsilon = max(self.epsilon_min, self.epsilon)
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+        else:
+            # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+            self.epsilon = max(self.epsilon_min, self.epsilon)
         
         # raise NotImplementedError("Needed for Q3")
 
@@ -320,7 +322,10 @@ class Reinforce(Agent):
         # ############################### #
         # WRITE ANY AGENT PARAMETERS HERE #
         # ############################### #
-
+        self.learning_rate_min = 1e-4
+        self.learning_rate_decay = 0.995
+        self.learning_rate = 0.001
+        self.learning_rate_intial = 0.001
         # ###############################################
         self.saveables.update(
             {
@@ -341,6 +346,7 @@ class Reinforce(Agent):
         """
         ### PUT YOUR CODE HERE ###
         # raise NotImplementedError("Needed for Q3")
+        self.learning_rate = self.learning_rate_intial * (1.0- (min(1.0,timestep / (0.07 * max_timesteps))) * 0.995)
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
