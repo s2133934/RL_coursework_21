@@ -184,11 +184,10 @@ class DQN(Agent):
         
         # https://github.com/adamprice97/cartpole/blob/master/cartpole.py
         # self.exploration_rate *= EXPLORATION_DECAY
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
-        else:
-            # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-            self.epsilon = max(self.epsilon_min, self.epsilon)
+
+        epsilon_decayed = self.epsilon * self.epsilon_decay
+        # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+        self.epsilon = max(self.epsilon_min, epsilon_decayed)
         
         # raise NotImplementedError("Needed for Q3")
 

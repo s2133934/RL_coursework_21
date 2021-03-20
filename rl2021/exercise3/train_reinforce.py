@@ -15,7 +15,7 @@ CARTPOLE_CONFIG = {
     "env": "CartPole-v1",
     "episode_length": 200,
     "max_timesteps": 200000,
-    "eval_freq": 5000,
+    "eval_freq": 5000, #5000
     "eval_episodes": 5,
     "max_time": 30 * 60,
     "gamma": 0.99,
