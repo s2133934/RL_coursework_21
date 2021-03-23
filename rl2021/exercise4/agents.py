@@ -89,7 +89,12 @@ class DDPG(Agent):
         # ################################################### #
 
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q4")
+        action_space_sample = self.action_space.sample()
+        self.noise = Normal(0, 0.1 * torch.ones(len(action_space_sample)))
+        #  sample(sample_shape=torch.Size([]))
+        
+        # raise NotImplementedError("Needed for Q4")
+        
 
         # ############################### #
         # WRITE ANY AGENT PARAMETERS HERE #
@@ -145,7 +150,7 @@ class DDPG(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q4")
+        # raise NotImplementedError("Needed for Q4")
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
@@ -161,7 +166,26 @@ class DDPG(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q4")
+
+        obs = torch.tensor(obs, dtype = torch.float32)
+        # obs = torch.from_numpy(obs)
+        # obs = obs.type(torch.FloatTensor)
+
+        if explore == False:
+            # Be greedy!
+            # actions = self.critic.forward(obs) # Cant make up my mind if it is the actor or critic... 
+            sample = self.actor.forward(obs)
+            # sample = torch.argmax(actions).item()
+
+        if explore == True:
+            # Use self.noise
+            sample = self.noise.sample()
+
+        sample.clamp(min=-1,max=1)
+
+        return sample
+        
+        # raise NotImplementedError("Needed for Q4")
 
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
@@ -176,9 +200,36 @@ class DDPG(Agent):
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q4")
+        # raise NotImplementedError("Needed for Q4")
         
-        q_loss = 0.0
-        p_loss = 0.0
+        q_loss = 0.0 #tensor.type(torch.float32)
+        p_loss = 0.0        
+
+        # previous_state = states
+        # states, actions, next_states, rewards, done = batch
+        print("previous stte shape", batch.next_states.shape)
+        print("previous state type", batch.next_states.type)
+
+        actor_target_output = self.actor_target.forward(batch.next_states)
+        critic_target_output = self.critic_target(torch.cat([batch.next_states,actor_target_output], dim = 1))
+
+        y_i = batch.rewards + self.gamma * ((1-batch.done) * critic_target_output)
+
+        critic_output = self.critic(torch.cat([batch.states,batch.actions], dim = 1))
+
+        q_loss = 1/len(batch.actions) * torch.sum(y_i - critic_output) **2
+
+        self.critic_optim.zero_grad()
+        q_loss.backward(retain_graph = True)
+        self.critic_optim.step()
+
+        # self.policy_optim.zero_grad()
+        # -torch.sum(critic_output).backward(retain_graph = True)
+        # self.policy_optim.step()
+
+        # self.batch
+        # self.actor_target.hard_update(self.actor)
+        # self.critic_target.hard_update(self.critic)
+
         return {"q_loss": q_loss,
                 "p_loss": p_loss}
