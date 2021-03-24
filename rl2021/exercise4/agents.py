@@ -150,6 +150,9 @@ class DDPG(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
+        # self.policy_learning_rate = self.policy_learning_rate * (1.0- (min(1.0,timestep / (0.07 * max_timesteps))) * 0.995)
+        # self.critic_learning_rate = self.critic_learning_rate * (1.0- (min(1.0,timestep / (0.07 * max_timesteps))) * 0.995)
+
         # raise NotImplementedError("Needed for Q4")
 
     def act(self, obs: np.ndarray, explore: bool):
@@ -174,12 +177,12 @@ class DDPG(Agent):
         if explore == False:
             # Be greedy!
             # actions = self.critic.forward(obs) # Cant make up my mind if it is the actor or critic... 
-            sample = self.actor.forward(obs)
+            sample = self.actor.forward(obs).detach()
             # sample = torch.argmax(actions).item()
 
         if explore == True:
             # Use self.noise
-            sample = self.noise.sample()
+            sample = (self.actor.forward(obs) + self.noise.sample()).detach()
 
         sample.clamp(min=-1,max=1)
 
@@ -207,29 +210,37 @@ class DDPG(Agent):
 
         # previous_state = states
         # states, actions, next_states, rewards, done = batch
-        print("previous stte shape", batch.next_states.shape)
-        print("previous state type", batch.next_states.type)
+        # print("previous stte shape", batch.next_states.shape)
+        # print("previous state type", batch.next_states.type)
 
         actor_target_output = self.actor_target.forward(batch.next_states)
         critic_target_output = self.critic_target(torch.cat([batch.next_states,actor_target_output], dim = 1))
 
         y_i = batch.rewards + self.gamma * ((1-batch.done) * critic_target_output)
 
-        critic_output = self.critic(torch.cat([batch.states,batch.actions], dim = 1))
+        critic_output = self.critic.forward(torch.cat([batch.states,batch.actions], dim = 1))
 
-        q_loss = 1/len(batch.actions) * torch.sum(y_i - critic_output) **2
+        q_loss = 1/len(batch.actions) * torch.sum(y_i - critic_output)**2
 
         self.critic_optim.zero_grad()
         q_loss.backward(retain_graph = True)
         self.critic_optim.step()
 
-        # self.policy_optim.zero_grad()
+        current_action = self.actor.forward(batch.states)
+        critic_output_p_loss = self.critic.forward(torch.cat([batch.states, current_action], dim = 1))
+
+        p_loss = 1/len(batch.actions) * torch.sum(critic_output_p_loss)
+
+        self.policy_optim.zero_grad()
+        p_loss.backward
         # -torch.sum(critic_output).backward(retain_graph = True)
-        # self.policy_optim.step()
+        self.policy_optim.step()
 
         # self.batch
-        # self.actor_target.hard_update(self.actor)
-        # self.critic_target.hard_update(self.critic)
+        # self.actor_target.hard_update(self.actor,self.tau)
+        # self.critic_target.hard_update(self.critic,self.tau)
+        self.critic_target.soft_update(self.critic,self.tau)
+        self.actor_target.soft_update(self.actor,self.tau)
 
         return {"q_loss": q_loss,
                 "p_loss": p_loss}

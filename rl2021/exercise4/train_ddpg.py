@@ -17,14 +17,14 @@ PENDULUM_CONFIG = {
     "episode_length": 200,
     "max_timesteps": 400000,
     "max_time": 120 * 60,
-    "eval_freq": 2000,
+    "eval_freq": 1000,
     "eval_episodes": 5,
-    "policy_learning_rate": 1e-1,
-    "critic_learning_rate": 1e-1,
+    "policy_learning_rate": 1e-2, #1e-1
+    "critic_learning_rate": 1e-2, #1e-1
     "critic_hidden_size": [64, 64],
     "policy_hidden_size": [64, 64],
     "tau": 0.01,
-    "batch_size": 10,
+    "batch_size": 50, #10
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
     "save_filename": "pendulum_latest.pt",
