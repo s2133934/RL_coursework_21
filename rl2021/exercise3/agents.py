@@ -177,18 +177,14 @@ class DQN(Agent):
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
-        ### PUT YOUR CODE HERE ### 
-        
         #Set a hard minimum on epsilon to ensure some exploration all of the time and a non negative epsilon!
         # self.episilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
-        
         # https://github.com/adamprice97/cartpole/blob/master/cartpole.py
         # self.exploration_rate *= EXPLORATION_DECAY
 
         epsilon_decayed = self.epsilon * self.epsilon_decay
         # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-        self.epsilon = max(self.epsilon_min, epsilon_decayed)
-        
+        self.epsilon = max(self.epsilon_min, epsilon_decayed) 
         # raise NotImplementedError("Needed for Q3")
 
     def act(self, obs: np.ndarray, explore: bool):
@@ -266,7 +262,7 @@ class DQN(Agent):
         if self.update_counter % self.target_update_freq ==0:
             self.critics_target.hard_update(self.critics_net)
        
-        return {"q_loss": q_loss}
+        return {"q_loss": q_loss.detach()}
 
 
 class Reinforce(Agent):

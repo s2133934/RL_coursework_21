@@ -129,11 +129,8 @@ class QLearningAgent(Agent):
         # action chosen by taking the maximum action values in q_table for a the next state
     
         target_value = reward + self.gamma * (1 - done) * self.q_table[(n_obs, n_action)]
-        self.q_table[(obs, action)] += self.alpha * (
-            target_value - self.q_table[(obs, action)]
-        )
+        self.q_table[(obs, action)] += self.alpha * (target_value - self.q_table[(obs, action)])
 
-        # raise NotImplementedError("Needed for Q2")
         return self.q_table[(obs, action)]
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
@@ -283,7 +280,7 @@ class MonteCarloAgent(Agent):
         decay_epsilon = 0.07
         self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.95
         # self.epsilon = self.epsilon_initial * (1.0 - (min(1.0, timestep / (decay_epsilon * max_timestep))) * 0.95)
-
+        
         # raise NotImplementedError("Needed for Q2")
 
 # if __name__ == "__main__":
