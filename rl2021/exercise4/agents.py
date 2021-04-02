@@ -184,7 +184,7 @@ class DDPG(Agent):
             # Use self.noise
             sample = (self.actor.forward(obs) + self.noise.sample()).detach()
 
-        sample.clamp(min=-1,max=1)
+        sample.clamp(min=-2,max=2)
 
         return sample
         
@@ -220,7 +220,7 @@ class DDPG(Agent):
 
         critic_output = self.critic.forward(torch.cat([batch.states,batch.actions], dim = 1))
 
-        q_loss = 1/len(batch.actions) * torch.sum(y_i - critic_output)**2
+        q_loss = 1/len(batch.actions) * torch.sum((y_i - critic_output)**2)
 
         self.critic_optim.zero_grad()
         q_loss.backward(retain_graph = True)
@@ -229,10 +229,10 @@ class DDPG(Agent):
         current_action = self.actor.forward(batch.states)
         critic_output_p_loss = self.critic.forward(torch.cat([batch.states, current_action], dim = 1))
 
-        p_loss = 1/len(batch.actions) * torch.sum(critic_output_p_loss)
+        p_loss = -1/len(batch.actions) * torch.sum(critic_output_p_loss)
 
         self.policy_optim.zero_grad()
-        p_loss.backward
+        p_loss.backward()
         # -torch.sum(critic_output).backward(retain_graph = True)
         self.policy_optim.step()
 
