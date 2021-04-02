@@ -27,7 +27,7 @@ CARTPOLE_CONFIG = {
     "batch_size": 10,
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
-    "plot_loss": False, # SET TRUE FOR 3.3 (Understanding the Loss)
+    "plot_loss": True, # SET TRUE FOR 3.3 (Understanding the Loss)
     "save_filename": None,
 }
 
@@ -40,17 +40,16 @@ LUNARLANDER_CONFIG = {
     "eval_episodes": 5,  # DECREASING THIS MIGHT REDUCE EVALUATION ACCURACY; BUT MAKES IT EASIER TO SEE HOW THE POLICY EVOLVES OVER TIME (BY ENABLING RENDER ABOVE)
     "learning_rate": 1e-3,
     "hidden_size": (128, 64),
-    "target_update_freq": 5000,
-    "batch_size": 10,
+    "target_update_freq": 500, #1000
+    "batch_size": 50,
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
-    "plot_loss": False,
+    "plot_loss": True,
     "save_filename": "dqn_lunarlander_latest.pt",
 }
 
-
-# CONFIG = CARTPOLE_CONFIG
-CONFIG = LUNARLANDER_CONFIG
+CONFIG = CARTPOLE_CONFIG
+# CONFIG = LUNARLANDER_CONFIG
 
 
 def play_episode(
