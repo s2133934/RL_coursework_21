@@ -94,7 +94,7 @@ class IndependentQLearningAgents(MultiAgent):
 
         Initializes some variables of the Independent Q-Learning agents, namely the epsilon, discount rate
         and learning rate
-        """
+        """  
 
         super().__init__(**kwargs)
         self.learning_rate = learning_rate
@@ -108,16 +108,23 @@ class IndependentQLearningAgents(MultiAgent):
         """Implement the epsilon-greedy action selection here
 
         **YOU MUST IMPLEMENT THIS FUNCTION FOR Q5**
-
         :param obss (List[np.ndarray] of float with dim (observation size)):
             received observations representing the current environmental state for each agent
         :return (List[int]): index of selected action for each agent
         """
         actions = []
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q5")
-        return actions
+        for current_agent in range(self.num_agents):
+            if np.random.random() < self.epsilon:
+                actions.append(np.random.randint(0,3,1,dtype=int)[0])
+            else:
+                q_tab = self.q_tables[current_agent]
+                q_values = [q_tab[(0, act)] for act in range(3)]
+                max_acts = np.argmax(q_values)
+                actions.append(max_acts)
 
+        # raise NotImplementedError("Needed for Q5")
+        return actions 
 
     def learn(
         self, obss: List[np.ndarray], actions: List[int], rewards: List[float], n_obss: List[np.ndarray], dones: List[bool]
@@ -135,9 +142,21 @@ class IndependentQLearningAgents(MultiAgent):
         :param dones (List[bool]): flag indicating whether a terminal state has been reached for each agent
         :return (List[float]): updated Q-values for current observation-action pair of each agent
         """
-        updated_values = []
+        updated_values = [] 
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q5")
+        for current_agent in range(self.num_agents): 
+            q_tab = self.q_tables[current_agent] 
+            current_action = actions[current_agent]
+
+            q_values = [q_tab[(0, act)] for act in range(3)] 
+            q_values_max = np.max(q_values)
+
+            update = q_tab[(0,current_action)] + self.learning_rate*(rewards[current_agent] + self.gamma * q_values_max - q_tab[(0,current_action)] )
+            
+            q_tab[(0,current_action)] = update 
+            updated_values.append(update)
+
+        # raise NotImplementedError("Needed for Q5")
         return updated_values
 
 
@@ -153,7 +172,7 @@ class IndependentQLearningAgents(MultiAgent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q5")
+        # raise NotImplementedError("Needed for Q5")
 
 
 class JointActionLearning(MultiAgent):
@@ -165,16 +184,16 @@ class JointActionLearning(MultiAgent):
     def __init__(self, learning_rate: float =0.5, epsilon: float =1.0, **kwargs):
         """Constructor of JointActionLearning
 
-        :param learning_rate (float): learning rate for Q-learning updates
-        :param epsilon (float): epsilon value for all agents
+            :param learning_rate (float): learning rate for Q-learning updates
+            :param epsilon (float): epsilon value for all agents
 
-        :attr q_tables (List[DefaultDict]): tables for Q-values mapping (OBS, ACT) pairs of
-            observations and joint actions to respective Q-values for all agents
-        :attr models (List[DefaultDict[DefaultDict]]): each agent holding model of other agent
-            mapping observation to other agent actions to count of other agent action
+            :attr q_tables (List[DefaultDict]): tables for Q-values mapping (OBS, ACT) pairs of
+                observations and joint actions to respective Q-values for all agents
+            :attr models (List[DefaultDict[DefaultDict]]): each agent holding model of other agent
+                mapping observation to other agent actions to count of other agent action
 
-        Initializes some variables of the Joint Action Learning agents, namely the epsilon, discount
-        rate and learning rate
+            Initializes some variables of the Joint Action Learning agents, namely the epsilon, discount
+            rate and learning rate
         """
 
         super().__init__(**kwargs)
@@ -195,45 +214,116 @@ class JointActionLearning(MultiAgent):
 
     def act(self, obss: List[np.ndarray]) -> List[int]:
         """Implement the epsilon-greedy action selection here
+            YOU MUST IMPLEMENT THIS FUNCTION FOR Q5
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q5**
-
-        :param obss (List[np.ndarray] of float with dim (observation size)):
-            received observations representing the current environmental state for each agent
-        :return (List[int]): index of selected action for each agent
+            :param obss (List[np.ndarray] of float with dim (observation size)):
+                received observations representing the current environmental state for each agent
+            :return (List[int]): index of selected action for each agent
         """
         joint_action = []
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q5")
-        return joint_action
+        for current_agent in range(self.num_agents):
+            if np.random.random() < self.epsilon or self.c_obss[current_agent][0] == 0:
+                joint_action.append(np.random.randint(0,3,1,dtype=int)[0])
+                #print('little bastard === ', joint_action)
+            else:
+                q_tab = self.q_tables[current_agent]
+                #print(',q_tab === ', q_tab)
+                model = self.models[current_agent]
+                q_values = [q_tab[(0, act)] for act in range(3)]
+                #len(self.action_spaces)
+                #############################
+                aggregates = []
+                for own_action in range(3):
+                    agg = 0
+                    for others_action in range(3):
+                        action_key = (own_action, others_action)
 
+                        model_agent = self.models[current_agent]
+                        c_obss_agent = self.c_obss[current_agent]
+                        # print('others_action === ', others_action)
+                        # print('c_obss_agent[0] === ', c_obss_agent[0])
+                        #print(f"epsilon: {self.epsilon}")
+                        #print(f"c_obss: {self.c_obss[current_agent]}")
+                        #print('q_tab[(0,action_key)] === ', q_tab[(0,action_key)])
+                        agg = agg + model[0][others_action]/c_obss_agent[0]*q_tab[(0,action_key)]
+                    #print('agg ===  ', agg)
+                    aggregates.append(agg)
+                action = np.argmax(aggregates)
+                #print(f"action:{action}, aggregates: {aggregates}")
+                ########################## 
+                joint_action.append(action)
+            
+        # print('actions - act ===  ',joint_action)
+        # raise NotImplementedError("Needed for Q5")
+
+        print(joint_action)
+        return joint_action
 
     def learn(
         self, obss: List[np.ndarray], actions: List[int], rewards: List[float], n_obss: List[np.ndarray], dones: List[bool]
     ) -> List[float]:
         """Updates the Q-tables and models based on agents' experience
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q5**
+            YOU MUST IMPLEMENT THIS FUNCTION FOR Q5
 
-        :param obss (List[np.ndarray] of float with dim (observation size)):
-            received observations representing the current environmental state for each agent
-        :param action (List[int]): index of applied action of each agent
-        :param rewards (List[float]): received reward for each agent
-        :param n_obss (List[np.ndarray] of float with dim (observation size)):
-            received observations representing the next environmental state for each agent
-        :param dones (List[bool]): flag indicating whether a terminal state has been reached for each agent
-        :return (List[float]): updated Q-values for current observation-action pair of each agent
+            :param obss (List[np.ndarray] of float with dim (observation size)):
+                received observations representing the current environmental state for each agent
+            :param action (List[int]): index of applied action of each agent
+            :param rewards (List[float]): received reward for each agent
+            :param n_obss (List[np.ndarray] of float with dim (observation size)):
+                received observations representing the next environmental state for each agent
+            :param dones (List[bool]): flag indicating whether a terminal state has been reached for each agent
+            :return (List[float]): updated Q-values for current observation-action pair of each agent
         """
+        #print("im in learn")
         updated_values = []
-        ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q5")
+        for current_agent in range(self.num_agents):
+            current_agent_action = actions[current_agent]
+            other_agent_action = actions[1-current_agent]
+
+            q_tab = self.q_tables[current_agent]
+            model = self.models[current_agent]
+            c_obss_agent = self.c_obss[current_agent]
+
+            action_key = (current_agent_action,other_agent_action)
+            model[0][other_agent_action] += 1
+            c_obss_agent[0] +=1
+
+            ##################
+            joint_action = []
+            for own_action in range(3):
+                agg = 0 
+                for others_action in range(3):
+                    current_action_key = (own_action, others_action)
+                    model_agent = self.models[current_agent]
+                    c_obss_agent = self.c_obss[current_agent]
+                    #print(f"action_key: {action_key}, q_tab value: {q_tab[(0,action_key)]}, N(s): {c_obss_agent[0]}, model: {model[0][others_action]}")
+                    agg = agg + model[0][others_action]/c_obss_agent[0]*q_tab[(0,current_action_key)]
+
+                joint_action.append(agg)
+            ##################
+
+            action_ = np.max(joint_action)
+            #print('aggregates ==== ', joint_action)
+            
+            print(f"action_key: {action_key}")
+            #print(f"q_tab before: {q_tab[(0,action_key)]}")
+            update = q_tab[(0,action_key)] + self.learning_rate * (rewards[current_agent] + self.gamma * action_ - q_tab[(0,action_key)])
+            #print(f"update: {update}")
+            #print(f"q_tab after: {q_tab[(0,action_key)]}")
+            q_tab[(0,action_key)] = update
+            updated_values.append(update)
+
+        # print('actions - learn ===  ',actions)
         return updated_values
+        # raise NotImplementedError("Needed for Q5")
 
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
         """Updates the hyperparameters
 
-        **YOU MUST IMPLEMENT THIS FUNCTION FOR Q5**
+        YOU MUST IMPLEMENT THIS FUNCTION FOR Q5
 
         This function is called before every episode and allows you to schedule your
         hyperparameters.
@@ -242,4 +332,9 @@ class JointActionLearning(MultiAgent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q5")
+        # raise NotImplementedError("Needed for Q5")
+        #         ### PUT YOUR CODE HERE ###
+        #raise NotImplementedError("Needed for Q5")
+        t = 1 if timestep == 0 else timestep
+        self.epsilon = max(0.01, self.epsilon/(2**int(t/20)))
+        self.learning_rate = max(0.001, self.learning_rate/(2**int(t/20)))
