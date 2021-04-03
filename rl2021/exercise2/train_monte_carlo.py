@@ -8,12 +8,12 @@ REAL_MAX_EPISODE_STEPS = 100 # CUT OF AN EPISODE THAT RUNS LONGER THAN THAT. DO 
 ### TUNE HYPERPARAMETERS HERE ###
 CONFIG = {
     "env": "Taxi-v3",
-    "total_eps": 100000,
-    "eps_max_steps": 100,
+    "total_eps": 100000, #100000
+    "eps_max_steps": 1500, #100
     "eval_episodes": 500,
     "eval_freq": 5000,
     "gamma": 0.99,
-    "epsilon": 0.01,
+    "epsilon": 0.001, #0.01
 }
 
 
