@@ -223,24 +223,19 @@ class JointActionLearning(MultiAgent):
         joint_action = []
         ### PUT YOUR CODE HERE ###
         for current_agent in range(self.num_agents):
+            c_obss_agent = self.c_obss[current_agent]
+            q_tab = self.q_tables[current_agent]
+            model = self.models[current_agent]
+
             if np.random.random() < self.epsilon or self.c_obss[current_agent][0] == 0:
                 joint_action.append(np.random.randint(0,3,1,dtype=int)[0])
                 #print('little bastard === ', joint_action)
             else:
-                q_tab = self.q_tables[current_agent]
-                #print(',q_tab === ', q_tab)
-                model = self.models[current_agent]
-                q_values = [q_tab[(0, act)] for act in range(3)]
-                #len(self.action_spaces)
-                #############################
                 aggregates = []
                 for own_action in range(3):
                     agg = 0
                     for others_action in range(3):
                         action_key = (own_action, others_action)
-
-                        model_agent = self.models[current_agent]
-                        c_obss_agent = self.c_obss[current_agent]
                         # print('others_action === ', others_action)
                         # print('c_obss_agent[0] === ', c_obss_agent[0])
                         #print(f"epsilon: {self.epsilon}")
@@ -275,6 +270,7 @@ class JointActionLearning(MultiAgent):
                 received observations representing the next environmental state for each agent
             :param dones (List[bool]): flag indicating whether a terminal state has been reached for each agent
             :return (List[float]): updated Q-values for current observation-action pair of each agent
+
         """
         #print("im in learn")
         updated_values = []
@@ -296,8 +292,6 @@ class JointActionLearning(MultiAgent):
                 agg = 0 
                 for others_action in range(3):
                     current_action_key = (own_action, others_action)
-                    model_agent = self.models[current_agent]
-                    c_obss_agent = self.c_obss[current_agent]
                     #print(f"action_key: {action_key}, q_tab value: {q_tab[(0,action_key)]}, N(s): {c_obss_agent[0]}, model: {model[0][others_action]}")
                     agg = agg + model[0][others_action]/c_obss_agent[0]*q_tab[(0,current_action_key)]
 
