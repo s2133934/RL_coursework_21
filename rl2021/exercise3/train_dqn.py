@@ -48,8 +48,8 @@ LUNARLANDER_CONFIG = {
     "save_filename": "dqn_lunarlander_latest.pt",
 }
 
-CONFIG = CARTPOLE_CONFIG
-# CONFIG = LUNARLANDER_CONFIG
+# CONFIG = CARTPOLE_CONFIG
+CONFIG = LUNARLANDER_CONFIG
 
 
 def play_episode(

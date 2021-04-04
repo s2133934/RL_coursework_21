@@ -26,7 +26,6 @@ CARTPOLE_CONFIG = {
 
 CONFIG = CARTPOLE_CONFIG
 
-
 def play_episode(
     env: gym.Env,
     agent: Reinforce,
