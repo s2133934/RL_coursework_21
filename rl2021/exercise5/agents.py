@@ -336,6 +336,7 @@ class JointActionLearning(MultiAgent):
                         agg = 0
                     
                     # agg = agg + model[0][others_action]/c_obss_agent[0]*q_tab[(,current_action_key)]
+                    # agghhh it matters which way around the choices are!! agh!
 
                 joint_action.append(agg)
             ##################
