@@ -319,7 +319,7 @@ class Reinforce(Agent):
         # WRITE ANY AGENT PARAMETERS HERE #
         # ############################### #
         self.learning_rate_min = 1e-4
-        self.learning_rate_decay = 0.995
+        self.learning_rate_decay = 0.95
         self.learning_rate = 1e-3
         self.learning_rate_intial = 1e-3
         # ###############################################

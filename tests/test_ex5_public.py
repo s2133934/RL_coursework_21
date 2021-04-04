@@ -135,4 +135,4 @@ def test_jalagents_1():
 
         # check model count
         other_i = 0 if i == 1 else 1
-        assert agents.models[i][o][action[other_i]] == 1
+        assert agents.models[i][o][action[other_i]] == 1 

@@ -21,7 +21,7 @@ CARTPOLE_CONFIG = {
     "max_time": 30 * 60,
     "eval_freq": 1000, # HOW OFTEN WE EVALUATE (AND RENDER IF RENDER=TRUE)
     "eval_episodes": 5,
-    "learning_rate": 0.001, #1e-2, lit indicates 0.001?
+    "learning_rate": 1e-3, #1e-2, lit indicates 0.001?
     "hidden_size": (128,64),
     "target_update_freq": 500, #5000 originally https://adgefficiency.com/dqn-solving/ reasoning
     "batch_size": 10,
@@ -31,14 +31,14 @@ CARTPOLE_CONFIG = {
     "save_filename": None,
 }
 
-LUNARLANDER_CONFIG = {
+LUNARLANDER_CONFIG = { 
     "env": "LunarLander-v2",
     "episode_length": 500,
     "max_timesteps": 300000,
     "max_time": 120 * 60,
     "eval_freq": 5000,
     "eval_episodes": 5,  # DECREASING THIS MIGHT REDUCE EVALUATION ACCURACY; BUT MAKES IT EASIER TO SEE HOW THE POLICY EVOLVES OVER TIME (BY ENABLING RENDER ABOVE)
-    "learning_rate": 1e-3,
+    "learning_rate": 1e-4,
     "hidden_size": (128, 64),
     "target_update_freq": 500, #1000
     "batch_size": 50,
