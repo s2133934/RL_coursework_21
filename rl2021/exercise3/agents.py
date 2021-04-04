@@ -142,12 +142,13 @@ class DQN(Agent):
         # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
         # ############################################# #
         self.learning_rate = learning_rate
+        # self.learning_rate = 0.001 # CH
         self.update_counter = 0
         self.target_update_freq = target_update_freq
         self.batch_size = batch_size
         self.gamma = gamma
 
-        self.epsilon = 1
+        self.epsilon = 1 
         # ########################################## ADDED:::
 
         self.epsilon_initial = 1
@@ -319,8 +320,8 @@ class Reinforce(Agent):
         # ############################### #
         self.learning_rate_min = 1e-4
         self.learning_rate_decay = 0.995
-        self.learning_rate = 0.001
-        self.learning_rate_intial = 0.001
+        self.learning_rate = 1e-3
+        self.learning_rate_intial = 1e-3
         # ###############################################
         self.saveables.update(
             {
@@ -341,7 +342,7 @@ class Reinforce(Agent):
         """
         ### PUT YOUR CODE HERE ###
         # raise NotImplementedError("Needed for Q3")
-        self.learning_rate = self.learning_rate_intial * (1.0- (min(1.0,timestep / (0.07 * max_timesteps))) * 0.995)
+        self.learning_rate = self.learning_rate_intial * (1.0 - (min(1.0,timestep / (0.07 * max_timesteps))) * self.learning_rate_decay)
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
@@ -385,7 +386,7 @@ class Reinforce(Agent):
         p_loss = 0.0
 
         obs = torch.tensor(np.array(observations), dtype = torch.float32)
-        G=0
+        G = 0
         loss = []
         for t in range(len(observations)-1,-1,-1):
             G = self.gamma * G + rewards[t]
@@ -398,4 +399,4 @@ class Reinforce(Agent):
         p_loss.backward()
         self.policy_optim.step()
 
-        return{"p_loss": loss}
+        return{"p_loss": p_loss} # RETURN P_LOSS
