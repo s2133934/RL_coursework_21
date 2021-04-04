@@ -38,7 +38,7 @@ LUNARLANDER_CONFIG = {
     "max_time": 120 * 60,
     "eval_freq": 5000,
     "eval_episodes": 5,  # DECREASING THIS MIGHT REDUCE EVALUATION ACCURACY; BUT MAKES IT EASIER TO SEE HOW THE POLICY EVOLVES OVER TIME (BY ENABLING RENDER ABOVE)
-    "learning_rate": 1e-4,
+    "learning_rate": 1e-3,
     "hidden_size": (128, 64),
     "target_update_freq": 500, #1000
     "batch_size": 50,

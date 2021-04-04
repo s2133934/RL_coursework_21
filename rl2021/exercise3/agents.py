@@ -342,7 +342,8 @@ class Reinforce(Agent):
         """
         ### PUT YOUR CODE HERE ###
         # raise NotImplementedError("Needed for Q3")
-        self.learning_rate = self.learning_rate_intial * (1.0 - (min(1.0,timestep / (0.07 * max_timesteps))) * self.learning_rate_decay)
+        decay_rate = 0.07 
+        self.learning_rate = self.learning_rate_intial * (1.0 - (min(1.0,timestep / (decay_rate * max_timesteps))) * self.learning_rate_decay)
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
