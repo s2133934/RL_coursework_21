@@ -113,15 +113,27 @@ class IndependentQLearningAgents(MultiAgent):
         :return (List[int]): index of selected action for each agent
         """
         actions = []
+        print('self.n_acts=== ', max(self.n_acts))
+        
+        num_actions = self.action_spaces[0].n # or self.n_acts[0] or max(self.n_acts) ??? Does it matter?
         ### PUT YOUR CODE HERE ###
         for current_agent in range(self.num_agents):
+
             if np.random.random() < self.epsilon:
-                actions.append(np.random.randint(0,3,1,dtype=int)[0])
+                actions.append(np.random.randint(0,num_actions,1,dtype=int)[0])
             else:
                 q_tab = self.q_tables[current_agent]
-                q_values = [q_tab[(0, act)] for act in range(3)]
-                max_acts = np.argmax(q_values)
-                actions.append(max_acts)
+                print('q_tab === ', q_tab)
+                q_values = [q_tab[(obss[current_agent], act)] for act in range(num_actions)]
+                print('q_values === ', q_values)
+                max_acts_arg = np.argmax(q_values)
+                print('max_acts_arg === ', max_acts_arg)            
+                # max_val = max(q_values)
+                # print('max_val === ', max_val) 
+
+                # max_acts = [idx for idx, act_val in enumerate(q_values) if act_val == max_val]
+                # print('max_acts === ', max_acts)
+                actions.append(max_acts_arg)
 
         # raise NotImplementedError("Needed for Q5")
         return actions 
@@ -148,7 +160,7 @@ class IndependentQLearningAgents(MultiAgent):
             q_tab = self.q_tables[current_agent] 
             current_action = actions[current_agent]
 
-            q_values = [q_tab[(0, act)] for act in range(3)] 
+            q_values = [q_tab[(obss[current_agent], act)] for act in range(3)] 
             q_values_max = np.max(q_values)
 
             update = q_tab[(0,current_action)] + self.learning_rate*(rewards[current_agent] + self.gamma * q_values_max - q_tab[(0,current_action)] )
