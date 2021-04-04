@@ -228,10 +228,10 @@ class DDPG(Agent):
 
         current_action = self.actor.forward(batch.states)
         critic_output_p_loss = self.critic.forward(torch.cat([batch.states, current_action], dim = 1))
-
+        
         p_loss = -1/len(batch.actions) * torch.sum(critic_output_p_loss)
 
-        self.policy_optim.zero_grad()
+        self.policy_optim.zero_grad() 
         p_loss.backward()
         # -torch.sum(critic_output).backward(retain_graph = True)
         self.policy_optim.step()
