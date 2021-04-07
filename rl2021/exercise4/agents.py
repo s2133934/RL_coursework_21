@@ -89,10 +89,9 @@ class DDPG(Agent):
         # ################################################### #
 
         ### PUT YOUR CODE HERE ###
+        # Just need to take a sample and add some noise right??
         action_space_sample = self.action_space.sample()
         self.noise = Normal(0, 0.1 * torch.ones(len(action_space_sample)))
-        #  sample(sample_shape=torch.Size([]))
-        
         # raise NotImplementedError("Needed for Q4")
         
 
@@ -110,7 +109,6 @@ class DDPG(Agent):
                 "critic_optim": self.critic_optim,
             }
         )
-
 
     def save(self, path: str, suffix: str = "") -> str:
         """Saves saveable PyTorch models under given path
@@ -150,9 +148,7 @@ class DDPG(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        # self.policy_learning_rate = self.policy_learning_rate * (1.0- (min(1.0,timestep / (0.07 * max_timesteps))) * 0.995)
-        # self.critic_learning_rate = self.critic_learning_rate * (1.0- (min(1.0,timestep / (0.07 * max_timesteps))) * 0.995)
-
+        # Tried a few things here but they just made it way worse!?
         # raise NotImplementedError("Needed for Q4")
 
     def act(self, obs: np.ndarray, explore: bool):
@@ -168,15 +164,10 @@ class DDPG(Agent):
         :param explore (bool): flag indicating whether we should explore
         :return (sample from self.action_space): action the agent should perform
         """
-        ### PUT YOUR CODE HERE ###
-
         obs = torch.tensor(obs, dtype = torch.float32)
-        # obs = torch.from_numpy(obs)
-        # obs = obs.type(torch.FloatTensor)
 
         if explore == False:
             # Be greedy!
-            # actions = self.critic.forward(obs) # Cant make up my mind if it is the actor or critic... 
             sample = self.actor.forward(obs).detach()
             # sample = torch.argmax(actions).item()
 
@@ -188,8 +179,6 @@ class DDPG(Agent):
 
         return sample
         
-        # raise NotImplementedError("Needed for Q4")
-
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
         
@@ -201,20 +190,15 @@ class DDPG(Agent):
 
         :param batch (Transition): batch vector from replay buffer
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
-        """
-        ### PUT YOUR CODE HERE ###
-        # raise NotImplementedError("Needed for Q4")
-        
-        q_loss = 0.0 #tensor.type(torch.float32)
+        """        
+        q_loss = 0.0 #tensor.type(torch.float32)?????
         p_loss = 0.0        
 
-        # previous_state = states
-        # states, actions, next_states, rewards, done = batch
-        # print("previous stte shape", batch.next_states.shape)
+        # print("previous state shape", batch.next_states.shape)
         # print("previous state type", batch.next_states.type)
 
-        actor_target_output = self.actor_target.forward(batch.next_states)
-        critic_target_output = self.critic_target(torch.cat([batch.next_states,actor_target_output], dim = 1))
+        actor_targ_output = self.actor_target.forward(batch.next_states)
+        critic_target_output = self.critic_target(torch.cat([batch.next_states,actor_targ_output], dim = 1))
 
         y_i = batch.rewards + self.gamma * ((1-batch.done) * critic_target_output)
 
@@ -223,7 +207,7 @@ class DDPG(Agent):
         q_loss = 1/len(batch.actions) * torch.sum((y_i - critic_output)**2)
 
         self.critic_optim.zero_grad()
-        q_loss.backward(retain_graph = True)
+        q_loss.backward(retain_graph = True) 
         self.critic_optim.step()
 
         current_action = self.actor.forward(batch.states)
@@ -233,12 +217,9 @@ class DDPG(Agent):
 
         self.policy_optim.zero_grad() 
         p_loss.backward()
-        # -torch.sum(critic_output).backward(retain_graph = True)
+        # -torch.sum(critic_output).backward(retain_graph = True) ??
         self.policy_optim.step()
 
-        # self.batch
-        # self.actor_target.hard_update(self.actor,self.tau)
-        # self.critic_target.hard_update(self.critic,self.tau)
         self.critic_target.soft_update(self.critic,self.tau)
         self.actor_target.soft_update(self.actor,self.tau)
 

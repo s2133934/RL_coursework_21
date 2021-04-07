@@ -113,7 +113,7 @@ class IndependentQLearningAgents(MultiAgent):
         :return (List[int]): index of selected action for each agent
         """
         actions = []
-        print('self.n_acts=== ', max(self.n_acts))
+        # print('self.n_acts=== ', max(self.n_acts))
         
         num_actions = self.action_spaces[0].n # or self.n_acts[0] or max(self.n_acts) ??? Does it matter?
         ### PUT YOUR CODE HERE ###
@@ -123,23 +123,23 @@ class IndependentQLearningAgents(MultiAgent):
                 actions.append(np.random.randint(0,num_actions,1,dtype=int)[0])
             else:
                 q_tab = self.q_tables[current_agent]
-                print('q_tab === ', q_tab)
+                # print('q_tab === ', q_tab)
                 q_values = [q_tab[(obss[current_agent], act)] for act in range(num_actions)]
-                print('q_values === ', q_values)
+                # print('q_values === ', q_values)
                 max_acts_arg = np.argmax(q_values)
-                print('max_acts_arg === ', max_acts_arg)            
+                # print('max_acts_arg === ', max_acts_arg)            
                 # max_val = max(q_values)
                 # print('max_val === ', max_val) 
                 # max_acts = [idx for idx, act_val in enumerate(q_values) if act_val == max_val]
                 # print('max_acts === ', max_acts)
                 actions.append(max_acts_arg)
         
-        # Checking the test for IQL
-        action = list(self.action_spaces.sample())
-        obs = list(self.observation_spaces.sample())
-        for i, (o, a) in enumerate(zip(obs, action)):
-            var = self.q_tables[i][(o, a)]
-            print(f"loop {i} === {var} and type {type(var)}")
+        # # Checking the test for IQL
+        # action = list(self.action_spaces.sample())
+        # obs = list(self.observation_spaces.sample())
+        # for i, (o, a) in enumerate(zip(obs, action)):
+        #     var = self.q_tables[i][(o, a)]
+        #     print(f"loop {i} === {var} and type {type(var)}")
 
         # raise NotImplementedError("Needed for Q5")
         return actions 
@@ -241,6 +241,7 @@ class JointActionLearning(MultiAgent):
             :return (List[int]): index of selected action for each agent
         """
         joint_action = []
+        # print(f'naction === {self.action_spaces[0].n}')
         ### PUT YOUR CODE HERE ###
         for current_agent in range(self.num_agents):
             c_obss_agent = self.c_obss[current_agent]
@@ -249,40 +250,40 @@ class JointActionLearning(MultiAgent):
 
             if np.random.random() < self.epsilon or self.c_obss[current_agent][0] == 0:
                 joint_action.append(np.random.randint(0,3,1,dtype=int)[0])
-                #print('little bastard === ', joint_action)
+                #print('little b*****d === ', joint_action)
             else:
-                aggregates = []
-                for own_action in range(3):
-                    agg = 0
-                    for others_action in range(3):
+                values = []
+                for own_action in range(self.action_spaces[0].n):
+                    expectation_vals = 0
+                    for others_action in range(self.action_spaces[0].n):
                         action_key = (own_action, others_action)
                         action_key_alt = (others_action, own_action)
                         
                         if c_obss_agent[obss[current_agent]] != 0:
                             if current_agent == 0: #own turn
-                                agg += model[obss[current_agent]][others_action] / c_obss_agent[obss[current_agent]]*q_tab[(obss[current_agent],action_key)]
+                                expectation_vals += model[obss[current_agent]][others_action] / c_obss_agent[obss[current_agent]]*q_tab[(obss[current_agent],action_key)]
                             else:
-                                agg += model[obss[current_agent]][others_action] / c_obss_agent[obss[current_agent]]*q_tab[(obss[current_agent],action_key_alt)]
+                                expectation_vals += model[obss[current_agent]][others_action] / c_obss_agent[obss[current_agent]]*q_tab[(obss[current_agent],action_key_alt)]
                         else:
-                            agg = 0
+                            expectation_vals = 0
 
                         # print(f'others_action === {others_action}')
                         # print(f'c_obss_agent[0] === {c_obss_agent[0]}')
                         #print(f"epsilon: {self.epsilon}")
                         #print(f"c_obss: {self.c_obss[current_agent]}")
                         #print('q_tab[(0,action_key)] === ', q_tab[(0,action_key)])
-                        # agg = agg + model[0][others_action]/c_obss_agent[0]*q_tab[(0,action_key)]
-                    #print('agg ===  ', agg)
-                    aggregates.append(agg)
-                action = np.argmax(aggregates)
-                #print(f"action:{action}, aggregates: {aggregates}")
+                        # expectation_vals = expectation_vals + model[0][others_action]/c_obss_agent[0]*q_tab[(0,action_key)]
+                    #print('expectation_vals ===  ', expectation_vals)
+                    values.append(expectation_vals)
+                action = np.argmax(values)
+                #print(f"action:{action}, values: {values}")
                 ########################## 
                 joint_action.append(action)
             
         # print(f'actions - act === {joint_action}')
         # raise NotImplementedError("Needed for Q5")
 
-        print(f' joint action returned === {joint_action}')
+        # print(f' joint action returned === {joint_action}')
         return joint_action
 
     def learn(
@@ -302,7 +303,6 @@ class JointActionLearning(MultiAgent):
             :return (List[float]): updated Q-values for current observation-action pair of each agent
 
         """
-        #print("im in learn")
         updated_values = []
         for current_agent in range(self.num_agents):
             current_agent_action = actions[current_agent]
@@ -316,42 +316,31 @@ class JointActionLearning(MultiAgent):
             model[obss[current_agent]][other_agent_action] += 1
             c_obss_agent[obss[current_agent]] +=1
 
-            ##################
             joint_action = []
             for own_action in range(3):
-                agg = 0 
+                expectation_vals = 0 
                 for others_action in range(3):
-                    current_action_key = (own_action, others_action)
                     #print(f"action_key: {action_key}, q_tab value: {q_tab[(0,action_key)]}, N(s): {c_obss_agent[0]}, model: {model[0][others_action]}")
-
                     action_key_own = (own_action, others_action)
                     action_key_alt = (others_action, own_action)
                     
-                    if c_obss_agent[n_obss[current_agent]] != 0:
-                        if current_agent == 0: #own turn
-                            agg += model[n_obss[current_agent]][others_action] / c_obss_agent[n_obss[current_agent]]*q_tab[(n_obss[current_agent],action_key_own)]
-                        else:
-                            agg += model[n_obss[current_agent]][others_action] / c_obss_agent[n_obss[current_agent]]*q_tab[(n_obss[current_agent],action_key_alt)]
+                    if c_obss_agent[n_obss[current_agent]] != 0: # Avoid the divide by zero error in the tests
+                        if current_agent == 0: #own agents turn
+                            expectation_vals += model[n_obss[current_agent]][others_action] / c_obss_agent[n_obss[current_agent]]*q_tab[(n_obss[current_agent],action_key_own)]
+                        else: #other agents turn
+                            expectation_vals += model[n_obss[current_agent]][others_action] / c_obss_agent[n_obss[current_agent]]*q_tab[(n_obss[current_agent],action_key_alt)]
                     else:
-                        agg = 0
-                    
-                    # agg = agg + model[0][others_action]/c_obss_agent[0]*q_tab[(,current_action_key)]
-                    # agghhh it matters which way around the choices are!! agh!
+                        expectation_vals = 0
 
-                joint_action.append(agg)
-            ##################
+                joint_action.append(expectation_vals)
+
 
             action_ = np.max(joint_action)
-            #print('aggregates ==== ', joint_action)
-            
-            print(f"action_key: {action_key}")
-            #print(f"q_tab before: {q_tab[(0,action_key)]}")
-            update = q_tab[(obss[current_agent],action_key)] + self.learning_rate * (rewards[current_agent] + self.gamma * action_ - q_tab[(obss[current_agent],action_key)])
             # print(f"update: {update}")
-            update = float(update)
+            update = float(q_tab[(obss[current_agent],action_key)] + self.learning_rate * (rewards[current_agent] + self.gamma * action_ - q_tab[(obss[current_agent],action_key)]))
             # print(f"update_after: {update}")
             #print(f"q_tab after: {q_tab[(0,action_key)]}")
-            q_tab[(0,action_key)] = update
+            q_tab[(obss[current_agent],action_key)] = update
             updated_values.append(update)
 
         # print('actions - learn ===  ',actions)
@@ -372,8 +361,10 @@ class JointActionLearning(MultiAgent):
         """
         ### PUT YOUR CODE HERE ###
         # raise NotImplementedError("Needed for Q5")
-        #         ### PUT YOUR CODE HERE ###
-        #raise NotImplementedError("Needed for Q5")
-        t = 1 if timestep == 0 else timestep
+        if timestep == 0:
+            t=1
+        else:
+            t = timestep
+
         self.epsilon = max(0.01, self.epsilon/(2**int(t/20)))
         self.learning_rate = max(0.001, self.learning_rate/(2**int(t/20)))

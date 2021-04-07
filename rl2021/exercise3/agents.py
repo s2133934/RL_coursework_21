@@ -12,7 +12,6 @@ from typing import Dict, Iterable, List
 from rl2021.exercise3.networks import FCNetwork
 from rl2021.exercise3.replay import Transition, ReplayBuffer
 
-
 class Agent(ABC):
     """Base class for Deep RL Exercise 3 Agents
 
@@ -142,21 +141,20 @@ class DQN(Agent):
         # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
         # ############################################# #
         self.learning_rate = learning_rate
-        # self.learning_rate = 0.001 # CH
+        # self.learning_rate = 0.001
         self.update_counter = 0
         self.target_update_freq = target_update_freq
         self.batch_size = batch_size
         self.gamma = gamma
 
         self.epsilon = 1 
-        # ########################################## ADDED:::
-
-        self.epsilon_initial = 1
+        # ########################################## ADDED::: i hope im allowed to do this.... :(
+        
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995 #0.995
+        self.epsilon_decay = 0.995 
 
         self.loss_func = torch.nn.MSELoss()
-        # Chose MSE loss as we are characterising the error as the distance between the target and the actual value
+        # MSE loss as we are seeing the error as the distance between the target and the actual 
 
         # ###########################################
         self.saveables.update(
@@ -178,15 +176,8 @@ class DQN(Agent):
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
-        #Set a hard minimum on epsilon to ensure some exploration all of the time and a non negative epsilon!
-        # self.episilon = max(self.epsilon_min, self.epsilon_decay * self.epsilon)
-        # https://github.com/adamprice97/cartpole/blob/master/cartpole.py
-        # self.exploration_rate *= EXPLORATION_DECAY
-
-        epsilon_decayed = self.epsilon * self.epsilon_decay
-        # self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-        self.epsilon = max(self.epsilon_min, epsilon_decayed) 
-        # raise NotImplementedError("Needed for Q3")
+        #Set a hard minimum on epsilon to ensure some exploration all of the time and a non negative epsilon
+        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay) 
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
@@ -202,18 +193,16 @@ class DQN(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-
+        # torch is super fussy about this, no joy with float 64?!
         obs = torch.from_numpy(obs)
         obs = obs.type(torch.FloatTensor)
 
-
         if explore == True:
-            # Agent follow epsilon greedy policy:
+            # agent is epsilon greedy
             if np.random.random() < self.epsilon:
-                # j = np.random.choice(3) 
-                # return np.random.choice(self.action_space)
                 return self.action_space.sample()
             else:
+                # agent is greedy
                 actions = self.critics_net.forward(obs)
                 return torch.argmax(actions).item()
 
@@ -238,20 +227,14 @@ class DQN(Agent):
         """
         ### PUT YOUR CODE HERE ###
         q_loss = 0.0
-
         action_batch = batch.actions
         action_batch = action_batch.type(torch.LongTensor)
-        # Evaluate current Q-values and predicted Q-values
-        q_current = self.critics_net.forward(batch.states).gather(1,action_batch) # shape[10,1]
-
-        q_next = self.critics_target.forward(batch.next_states).detach() # shape[10,2] 
-
-        q_max = torch.max(q_next,dim=1)[0].view(self.batch_size,1) # shape [10] -> [10,1]
-
-        q_target = batch.rewards + self.gamma * ((1-batch.done) * q_max) # shape[10,1]
-
-        # Loss Function
-        q_loss = self.loss_func(q_current,q_target) #MSELoss(Current Q values, Target Q Values)
+        # Evaluate current and predicted q values
+        q_next = self.critics_target.forward(batch.next_states).detach()
+        q_max = torch.max(q_next,dim=1)[0].view(self.batch_size,1)
+        
+        # losses
+        q_loss = self.loss_func(self.critics_net.forward(batch.states).gather(1,action_batch),batch.rewards + self.gamma * ((1-batch.done) * q_max))
         q_loss.clamp(min=-1,max=1)
 
         self.critics_optim.zero_grad()
@@ -260,10 +243,12 @@ class DQN(Agent):
 
         self.update_counter += 1
 
-        if self.update_counter % self.target_update_freq ==0:
+        if self.update_counter % self.target_update_freq == 0:
             self.critics_target.hard_update(self.critics_net)
-       
-        return {"q_loss": q_loss.detach()}
+
+        q_loss = q_loss.detach()
+        
+        return {"q_loss": q_loss}
 
 
 class Reinforce(Agent):
@@ -319,9 +304,9 @@ class Reinforce(Agent):
         # WRITE ANY AGENT PARAMETERS HERE #
         # ############################### #
         self.learning_rate_min = 1e-4
-        self.learning_rate_decay = 0.95
+        self.learning_rate_decay = 0.998
         self.learning_rate = 1e-3
-        self.learning_rate_intial = 1e-3
+        self.learning_rate_intial = 1e-3 
         # ###############################################
         self.saveables.update(
             {
@@ -341,9 +326,9 @@ class Reinforce(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         ### PUT YOUR CODE HERE ###
-        # raise NotImplementedError("Needed for Q3")
         decay_rate = 0.07 
         self.learning_rate = self.learning_rate_intial * (1.0 - (min(1.0,timestep / (decay_rate * max_timesteps))) * self.learning_rate_decay)
+        # raise NotImplementedError("Needed for Q3")
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
@@ -358,16 +343,15 @@ class Reinforce(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-
+        #torch types
         obs = torch.tensor(obs, dtype = torch.float32)
-        
+        #forward pass
         p = self.policy.forward(obs)
         # Take a random choice from our probability distribution:
-        sample = np.random.choice(range(self.action_space.n), p= p.detach().numpy(), size = 1)[0]
+        random_choice = np.random.choice(range(self.action_space.n), p= p.detach().numpy(), size = 1)[0]
 
-        return sample
+        return random_choice
 
-        # raise NotImplementedError("Needed for Q3")
 
     def update(
         self, rewards: List[float], observations: List[np.ndarray], actions: List[int],
@@ -385,19 +369,21 @@ class Reinforce(Agent):
         ### PUT YOUR CODE HERE ###
         # raise NotImplementedError("Needed for Q3")
         p_loss = 0.0
+        loss = []
+        G = 0
 
         obs = torch.tensor(np.array(observations), dtype = torch.float32)
-        G = 0
-        loss = []
         for t in range(len(observations)-1,-1,-1):
+            #pseudocode
             G = self.gamma * G + rewards[t]
-            loss.append(- self.gamma * G * torch.log(self.policy.forward(obs[t])[actions[t]]))
+            log_part = torch.log(self.policy.forward(obs[t])[actions[t]])
+            loss.append(- self.gamma * G * log_part)
         
         p_loss = sum(loss)/len(rewards)
 
-        # Reset Gradient
         self.policy_optim.zero_grad()
+        #backward pass
         p_loss.backward()
         self.policy_optim.step()
 
-        return{"p_loss": p_loss} # RETURN P_LOSS
+        return{"p_loss": p_loss}

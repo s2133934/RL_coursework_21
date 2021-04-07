@@ -23,7 +23,7 @@ CARTPOLE_CONFIG = {
     "eval_episodes": 5,
     "learning_rate": 1e-3, #1e-2, lit indicates 0.001?
     "hidden_size": (128,64),
-    "target_update_freq": 500, #5000 originally https://adgefficiency.com/dqn-solving/ reasoning
+    "target_update_freq": 500, #5000
     "batch_size": 10,
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
@@ -44,12 +44,12 @@ LUNARLANDER_CONFIG = {
     "batch_size": 50,
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
-    "plot_loss": True,
+    "plot_loss": False,
     "save_filename": "dqn_lunarlander_latest.pt",
 }
 
-# CONFIG = CARTPOLE_CONFIG
-CONFIG = LUNARLANDER_CONFIG
+CONFIG = CARTPOLE_CONFIG 
+# CONFIG = LUNARLANDER_CONFIG
 
 
 def play_episode(

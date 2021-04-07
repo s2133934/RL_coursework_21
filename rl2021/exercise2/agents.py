@@ -250,16 +250,6 @@ class MonteCarloAgent(Agent):
                 # A_star = np.argmax(Q(state,action)) 
                 # This is the epsilon soft bit
                 # for all a in actions:
-        # for i, step in enumerate(episode[::-1]):
-        #     G = self.gamma*G + step[2]
-
-        #     if step[0] not in [x[0] for x in episode[::-1][len(episode)-i:]]:
-        #         idx = (step[0][0], step[0][1])
-        #         returns[idx].append(G)
-        #         self.q_table[(obs, action)] = np.average(returns[idx])
-        #         # newValue = np.average(returns[idx])
-
-        #         updated_values[idx[0], idx[1]] = newValue
 
         # raise NotImplementedError("Needed for Q2")
         return updated_values
@@ -276,14 +266,8 @@ class MonteCarloAgent(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
         decay_epsilon = 0.001
-        self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.45
+        self.epsilon = 1.0-(min(1.0, timestep/(decay_epsilon*max_timestep)))*0.46
         # self.epsilon = self.epsilon_initial * (1.0 - (min(1.0, timestep / (decay_epsilon * max_timestep))) * 0.95)
-        
-        # SOMEVALUE = 80000
-        # if timestep > SOMEVALUE:
-        #     self.gamma = 0.999999
-        # self.gamma = 0.9 + 0.1 * timestep/max_timestep    
-
         # raise NotImplementedError("Needed for Q2")
 
 # if __name__ == "__main__":
