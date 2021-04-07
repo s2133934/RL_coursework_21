@@ -134,13 +134,12 @@ class IndependentQLearningAgents(MultiAgent):
                 # print('max_acts === ', max_acts)
                 actions.append(max_acts_arg)
         
-        # # Checking the test for IQL
+        # # Checking the test for IQL as it failed a lot... 
         # action = list(self.action_spaces.sample())
         # obs = list(self.observation_spaces.sample())
         # for i, (o, a) in enumerate(zip(obs, action)):
         #     var = self.q_tables[i][(o, a)]
         #     print(f"loop {i} === {var} and type {type(var)}")
-
         # raise NotImplementedError("Needed for Q5")
         return actions 
 
